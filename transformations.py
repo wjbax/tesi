@@ -5,26 +5,34 @@ import numpy as np
 from skimage import transform
 import cv2
 from PIL import Image, ImageFilter
+import random
 
 #%% Rotation
-def rotation(direction,image,seg,softmax,angle,filler1=0, filler2=0):
+def rotation(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     if direction == 1:
-        new_image = transform.rotate(image,angle)
-        new_seg = transform.rotate(seg,angle)
-        new_softmax = transform.rotate(softmax,angle)
+        factor = random.sample([90,270],1)[0]
+        new_image = transform.rotate(image,factor)
+        new_seg = transform.rotate(seg,factor)
+        new_softmax = transform.rotate(softmax,factor)
+
     elif direction == 0:
-        new_image = transform.rotate(image,-angle)
-        new_seg = transform.rotate(seg,-angle)
-        new_softmax = transform.rotate(softmax,-angle)
+        new_image = transform.rotate(image,-factor)
+        new_seg = transform.rotate(seg,-factor)
+        new_softmax = transform.rotate(softmax,-factor)
+
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,None,None,None,None
+    new_image = np.round(new_image).astype(np.float32)
+    new_seg = np.round(new_seg).astype(np.float32)
+    new_softmax = np.round(new_softmax).astype(np.float32)
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Scaling
-def scaling(direction,image,seg,softmax,factor,original_shape, new_shape=0, filler1=0):
+def scaling(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     width = original_shape[0]
     height = original_shape[1]
     if direction == 1:
+        factor = np.random.uniform(0.8,1)
         new_shape = [np.ceil(factor*np.array(width)).astype(int),np.ceil(factor*np.array(height)).astype(int)]
         x = width - new_shape[0]
         y = height - new_shape[1]
@@ -51,10 +59,14 @@ def scaling(direction,image,seg,softmax,factor,original_shape, new_shape=0, fill
         new_softmax = transform.resize(crop_softmax, [width,height])
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,new_shape,None,None,None
+    
+    new_image = np.round(new_image).astype(np.float32)
+    new_seg = np.round(new_seg).astype(np.float32)
+    new_softmax = np.round(new_softmax).astype(np.float32)
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Gaussian Blur
-def gaussblur(direction,image,seg,softmax,filler1=0,filler2=0, filler3=0):
+def gaussblur(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     if direction == 1:
         radius = 2
         image = Image.fromarray(image.astype(np.uint8))
@@ -69,10 +81,10 @@ def gaussblur(direction,image,seg,softmax,filler1=0,filler2=0, filler3=0):
         new_softmax = softmax
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,None,None,None,None,None
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Vertical_mirroring
-def vert_mirr(direction,image,seg,softmax,filler1=0,filler2=0, filler3=0):
+def vert_mirr(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     if direction == 1:
         new_image = image[::-1,:,:]
         new_seg = seg[::-1,:]
@@ -83,10 +95,13 @@ def vert_mirr(direction,image,seg,softmax,filler1=0,filler2=0, filler3=0):
         new_softmax = softmax[::-1,:]
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,None,None,None,None
+    new_image = np.round(new_image).astype(np.float32)
+    new_seg = np.round(new_seg).astype(np.float32)
+    new_softmax = np.round(new_softmax).astype(np.float32)
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Horizontal_mirroring
-def hor_mirr(direction,image,seg,softmax,filler1=0,filler2=0):
+def hor_mirr(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     if direction == 1:
         new_image = image[:,::-1,:]
         new_seg = seg[:,::-1]
@@ -97,15 +112,20 @@ def hor_mirr(direction,image,seg,softmax,filler1=0,filler2=0):
         new_softmax = softmax[:,::-1]
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,None,None,None,None
+    
+    new_image = np.round(new_image).astype(np.float32)
+    new_seg = np.round(new_seg).astype(np.float32)
+    new_softmax = np.round(new_softmax).astype(np.float32)
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% HSV_perturbations
-def hsv_pert(direction,image,seg,softmax,angle,factor_sat=0, sign_factor_sat=1, factor_value=0, sign_factor_value=1):
+def hsv_pert(direction,image,seg,softmax,original_shape=[],new_shape=[],factor=0,factor_sat=0,sign_factor_sat=1,factor_value=0,sign_factor_value=1):
     if direction == 1:
+        factor = np.random.randint(-10,10)
         new_image_raw = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         new_image = np.copy(new_image_raw)
     
-        new_hue = (new_image_raw[:,:,0] + angle) % 360
+        new_hue = (new_image_raw[:,:,0] + factor) % 360
         new_sat = new_image_raw[:,:,1]
         new_value = new_image_raw[:,:,2]
     
@@ -144,11 +164,11 @@ def hsv_pert(direction,image,seg,softmax,angle,factor_sat=0, sign_factor_sat=1, 
         new_seg = seg
         new_softmax = softmax
         
-    if direction == 0:
+    elif direction == 0:
         new_image_raw = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         new_image_ric = np.copy(new_image_raw)
     
-        ric_hue = (new_image_ric[:,:,0] + 360 - angle) % 360
+        ric_hue = (new_image_ric[:,:,0] + 360 - factor) % 360
     
         ric_sat = np.copy(new_image_ric[:,:,1])
         if sign_factor_sat == 1:
@@ -173,8 +193,9 @@ def hsv_pert(direction,image,seg,softmax,angle,factor_sat=0, sign_factor_sat=1, 
         
         new_seg = seg
         new_softmax = softmax
+        
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
-    return new_image,new_seg,new_softmax,factor_sat,sign_factor_sat,factor_value,sign_factor_value
+    return new_image,new_seg,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%%
