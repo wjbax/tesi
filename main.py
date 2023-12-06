@@ -145,7 +145,7 @@ for directory in directories:
             new_image_tosave = cv2.cvtColor(new_image,cv2.COLOR_RGB2BGR)
             cv2.imwrite(pert_image_directory + file_name, new_image_tosave)
             cv2.imwrite(pert_seg_directory + file_name, new_seg)
-            np.savez(pert_softmax_directory + file_name[:-5],softmax=new_softmax)
+            np.savez(pert_softmax_directory + file_name[:-4] + ".npz",softmax=new_softmax)
             
             ric_image = np.copy(new_image)
             ric_seg = np.copy(new_seg)
