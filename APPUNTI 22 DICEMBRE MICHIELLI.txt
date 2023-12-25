@@ -1,0 +1,7 @@
+1. Controllare le dinamiche DOPO ogni trasformazione (arrivava ad essere solo 0 e 1) (può essere problema del round della softmax che obv non va fatto)
+
+2. Per l'entropia, calcolare l'histogram (np.histogram) layer per layer, nel caso faremo poi multiclasse, e applicare p(x). Utilizziamo log2 sempre. Lascio sia la mia entropia ([:,:,0 e 1]) e fare anche Shannon.
+
+3. Idea: entropia per ogni i,j delle 20 perturbated sofmtax
+
+4. Rileggere bene [14] TTA TTD -> se è istogramma congiunto tra X e Y, possiamo farlo anche noi tra incertezza ed errore? Oppure che metriche mettiamo? 20 valori di DICE su X, mentre Y può essere una delle altre metriche globali (es: RMSE)

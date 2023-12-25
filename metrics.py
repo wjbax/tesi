@@ -3,7 +3,8 @@ from scipy.stats import entropy
 
 #Entropy of a softmax
 def softmax_entropy(softmax):
-    ent,_ = entropy(softmax)
+    ent = -np.sum(softmax*np.log(softmax)) #log2 non si può fare per 0, quindi fare per softmax>0
+    # ent = entropy(softmax)
     return ent
 
 #Cross Entropy between two softmax

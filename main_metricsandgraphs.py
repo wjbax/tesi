@@ -9,7 +9,7 @@ DATASET_path = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-U
 names = [d for d in os.listdir(DATASET_path + "RESULTS_MC/test/mask/") if os.path.isdir(os.path.join(DATASET_path + "RESULTS_MC/test/mask/", d))]
 n_valutations = 20
 
-DATAFRAME = pd.DataFrame(columns=['Name','Order','entropy','cross_entropy','RMSE','kl_div','dice'])
+DATAFRAME = pd.DataFrame(columns=['Name','Order','entropy','cross_entropy','RMSE',"""'kl_div',"""'dice'])
 
 for name in names:
     softmax_entropy = []
@@ -41,23 +41,49 @@ for name in names:
                          'entropy' : softmax_entropy, 
                          'cross_entropy' : cross_entropy,
                          'RMSE':RMSE,
-                         'kl_div':kl_div,
+                         # 'kl_div':kl_div,
                          'dice':dice}
         row_track = pd.DataFrame([row_data_dict])
         DATAFRAME=pd.concat([DATAFRAME,row_track],axis=0)
         
         # del test_softmax
         # del test_seg
-        
-#%%
-selected_columns = ['Name','Order','cross_entropy','RMSE','dice']
-selected_data = DATAFRAME[selected_columns].values
 
 #%%
 csv_path = "C:/Users/willy/Desktop/Tesi_v2/tesi"
-DATAFRAME[selected_columns].to_csv(csv_path+"/DATAFRAME.csv", index=False)
+DATAFRAME.to_csv(csv_path+"/DATAFRAME.csv", index=False)
 
 
+#%%
+DICE = DATAFRAME['dice'].values
+index = np.where(DICE != -1)
+
+DICE = DICE[index]
+
+ent = DATAFRAME['entropy'].values
+ent = ent[index]
+
+c_ent = DATAFRAME['cross_entropy'].values
+c_ent = c_ent[index]
+
+rmse = DATAFRAME['RMSE'].values
+rmse = rmse[index]
+
+
+plt.figure(figsize=(20,20))
+plt.subplot(221)
+plt.title("DICE vs Entropy")
+plt.scatter(DICE,ent)
+plt.subplot(222)
+plt.title("DICE vs cross_entropy")
+plt.scatter(DICE,c_ent)
+plt.subplot(223)
+plt.title("DICE vs RMSE")
+plt.scatter(DICE,rmse)
+plt.subplot(224)
+plt.title("RMSE vs Entropy")
+plt.scatter(rmse,ent)
+plt.show()
 
 
 

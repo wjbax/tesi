@@ -21,7 +21,7 @@ def rotation(direction,image,softmax,original_shape=[],new_shape=[],factor=0,fac
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
     new_image = np.round(new_image).astype(np.float32)
-    new_softmax = np.round(new_softmax).astype(np.float32)
+    # new_softmax = np.round(new_softmax).astype(np.float32)
     return new_image,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 
@@ -55,7 +55,7 @@ def scaling(direction,image,softmax,original_shape=[],new_shape=[],factor=0,fact
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
     
     new_image = np.round(new_image).astype(np.float32)
-    new_softmax = np.round(new_softmax).astype(np.float32)
+    # new_softmax = np.round(new_softmax).astype(np.float32)
     return new_image,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Gaussian Blur
@@ -85,7 +85,7 @@ def vert_mirr(direction,image,softmax,original_shape=[],new_shape=[],factor=0,fa
     else:
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
     new_image = np.round(new_image).astype(np.float32)
-    new_softmax = np.round(new_softmax).astype(np.float32)
+    # new_softmax = np.round(new_softmax).astype(np.float32)
     return new_image,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% Horizontal_mirroring
@@ -100,7 +100,7 @@ def hor_mirr(direction,image,softmax,original_shape=[],new_shape=[],factor=0,fac
         raise Exception("Error! Direction must be 1 (direct) or 0 (inverse)")
     
     new_image = np.round(new_image).astype(np.float32)
-    new_softmax = np.round(new_softmax).astype(np.float32)
+    # new_softmax = np.round(new_softmax).astype(np.float32)
     return new_image,new_softmax,factor,new_shape,factor_sat,sign_factor_sat,factor_value,sign_factor_value
 
 #%% HSV_perturbations
