@@ -31,10 +31,27 @@ def entropy_mean(entropy_map):
 
 #%% Dice
 def dice(seg1, seg2):
-    dice_coeff = -1
+    dice_coeff = 0
     if np.sum(seg1)+np.sum(seg2) > 0:
         intersection = np.sum(seg1 * seg2)
         dice_coeff = (2.0 * intersection) / (np.sum(seg1) + np.sum(seg2))  
     return dice_coeff
 
-#%%
+#%% cv
+def cv(softmax_matrix):
+    shape = np.shape(softmax_matrix)
+    cv_map = np.zeros([shape[0],shape[1]])
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            ij_vector = softmax_matrix[i,j,:]
+            sum_ij_vector = np.nansum(ij_vector)
+            mu = sum_ij_vector/len(ij_vector)
+            std = np.nanstd(ij_vector)
+            cv_map[i,j] = std/mu
+    return cv_map
+
+def cv_sum(cv_map):
+    return np.nansum(cv_map)
+
+def cv_mean(cv_map):
+    return np.nanmean(cv_map)

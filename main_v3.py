@@ -23,7 +23,7 @@ softmax_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ
 seg_MC_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ segmentation)/Liver HE Steatosis (TEMP)/Liver HE Steatosis (TEMP)/k-net+swin/TEST_2classes/RESULTS/test/mask/"
 
 #%%
-DATASET = np.zeros([50,3])
+DATASET = np.zeros([50,5])
 i = 0
 for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     softmax_path = softmax_dir + GT_seg_name + "/"
@@ -40,6 +40,10 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     entropy_sum = m.entropy_sum(entropy_map)
     entropy_mean = m.entropy_mean(entropy_map)
     
+    cv_map = m.cv(softmax_matrix)
+    cv_sum = m.cv_sum(cv_map)
+    cv_mean = m.cv_mean(cv_map)
+    
     seg_GT = cv2.imread(GT_seg_dir + GT_seg_name)
     seg_MC = cv2.imread(seg_MC_path)
     
@@ -47,7 +51,9 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     
     DATASET[i,0] = entropy_sum
     DATASET[i,1] = entropy_mean
-    DATASET[i,2] = DICE
+    DATASET[i,2] = cv_sum
+    DATASET[i,3] = cv_mean
+    DATASET[i,4] = DICE
     
     i += 1
 #%% DATAFRAME AND DATASET SPLIT
