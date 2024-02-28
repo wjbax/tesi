@@ -11,7 +11,8 @@ from matplotlib import pyplot as plt
 from scipy import stats
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error 
-
+from sklearn.svm import SVR
+from sklearn.preprocessing import StandardScaler
 
 #%%
 def lin_regr(slope,x,intercept):
@@ -72,9 +73,9 @@ nent = (cent-entm)/(entM-entm)
 ncv = (ccv-cvm)/(cvM-cvm)
 ndice = (cdice-dicem)/(diceM-dicem)
 
-plt.plot(nent)
-plt.plot(ncv)
-plt.plot(ndice)
+# plt.plot(nent)
+# plt.plot(ncv)
+# plt.plot(ndice)
 
 #%%
 perc_split = 0.8
@@ -115,37 +116,6 @@ y_mlr_tr = mult_lin_regr.predict(X_tr)
 y_mlr_test = mult_lin_regr.predict(X_test)
 
 #%%
-print( 
-  'mean_squared_error_ent_train : ', mean_squared_error(trdice,y_pred_ent_tr)) 
-print( 
-  'mean_absolute_error_ent_train : ', mean_absolute_error(trdice,y_pred_ent_tr)) 
-
-print( 
-  'mean_squared_error_ent_test : ', mean_squared_error(testdice,y_pred_ent_test)) 
-print( 
-  'mean_absolute_error_ent_test : ', mean_absolute_error(testdice,y_pred_ent_test))
-
-print( 
-  'mean_squared_error_cv_train : ', mean_squared_error(trdice,y_pred_cv_tr)) 
-print( 
-  'mean_absolute_error_cv_train : ', mean_absolute_error(trdice,y_pred_cv_tr)) 
-
-print( 
-  'mean_squared_error_cv_test : ', mean_squared_error(testdice,y_pred_cv_test)) 
-print( 
-  'mean_absolute_error_cv_test : ', mean_absolute_error(testdice,y_pred_cv_test))
-
-print( 
-  'mean_squared_error_mlr_train : ', mean_squared_error(trdice,y_mlr_tr)) 
-print( 
-  'mean_absolute_error_mlr_train : ', mean_absolute_error(trdice,y_mlr_tr)) 
-
-print( 
-  'mean_squared_error_mlr_test : ', mean_squared_error(testdice,y_mlr_test)) 
-print( 
-  'mean_absolute_error_mlr_test : ', mean_absolute_error(testdice,y_mlr_test))
-
-#%%
 # Calculate mean squared error and mean absolute error for entity_train
 mse_ent_train = mean_squared_error(trdice, y_pred_ent_tr)
 mae_ent_train = mean_absolute_error(trdice, y_pred_ent_tr)
@@ -171,18 +141,41 @@ mse_mlr_test = mean_squared_error(testdice, y_mlr_test)
 mae_mlr_test = mean_absolute_error(testdice, y_mlr_test)
 
 #%%
-plt.figure(figsize=(10,5))
+plt.figure(figsize=(14,7))
 
 plt.subplot(211)
-plt.plot(y_pred_cv_tr, 'g')
-plt.plot(y_pred_ent_tr, 'b')
-plt.plot(y_mlr_tr, 'c')
-plt.plot(trdice, 'r')
+plt.plot(y_pred_cv_tr, 'g', label='cv regression')
+plt.plot(y_pred_ent_tr, 'b', label='entropy regression')
+plt.plot(y_mlr_tr, 'c', label='multilinear regression')
+plt.plot(trdice, 'r', label='dice')
+plt.legend(loc='lower right')
+plt.title("Training Set Predictions")
 
 plt.subplot(212)
-plt.plot(y_pred_cv_test, 'g')
-plt.plot(y_pred_ent_test, 'b')
-plt.plot(y_mlr_test, 'c')
-plt.plot(testdice, 'r')
+plt.plot(y_pred_cv_test, 'g', label='cv regression')
+plt.plot(y_pred_ent_test, 'b', label='entropy regression')
+plt.plot(y_mlr_test, 'c', label='multilinear regression')
+plt.plot(testdice, 'r', label='dice')
+plt.legend(loc='lower right')
+plt.title("Test Set Predictions")
 
+plt.show()
+
+#%%
+plt.figure(figsize=(17,13))
+plt.subplot(411)
+plt.plot(nent,'b')
+plt.title("Normalized entropy")
+plt.subplot(412)
+plt.plot(ncv, 'g')
+plt.title("Normalized cv")
+plt.subplot(413)
+plt.plot(ndice, 'r')
+plt.title("Normalized dice")
+plt.subplot(414)
+plt.plot(nent,'b', label='normalized entropy')
+plt.plot(ncv, 'g', label='normalized cv')
+plt.plot(ndice, 'r', label='normalized dice')
+plt.title("Normalized metrics")
+plt.legend(loc='lower right')
 plt.show()
