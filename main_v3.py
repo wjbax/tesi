@@ -40,7 +40,7 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     entropy_sum = m.entropy_sum(entropy_map)
     entropy_mean = m.entropy_mean(entropy_map)
     
-    cv_map = m.cv(softmax_matrix)
+    cv_map = m.cv(softmax_matrix) #cv = Coefficient of Variation
     cv_sum = m.cv_sum(cv_map)
     cv_mean = m.cv_mean(cv_map)
     
