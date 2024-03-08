@@ -29,13 +29,23 @@ def entropy_mean(entropy_map):
         return 0
     return np.nanmean(entropy_map)
 
-#%% Dice
-def dice(seg1, seg2):
-    dice_coeff = 0
-    if np.sum(seg1)+np.sum(seg2) > 0:
-        intersection = np.sum(seg1 * seg2)
-        dice_coeff = (2.0 * intersection) / (np.sum(seg1) + np.sum(seg2))  
-    return dice_coeff
+#%% Dice NON CORRETTO
+# def dice(seg1, seg2):
+#     dice_coeff = 0
+#     if np.sum(seg1)+np.sum(seg2) > 0:
+#         intersection = np.sum(seg1 * seg2)
+#         dice_coeff = (2.0 * intersection) / (np.sum(seg1) + np.sum(seg2))  
+#     return dice_coeff
+
+#%% dice corretto
+def dice(seg1,seg2):
+    Z = seg1+seg2
+    if np.sum(Z) == 0: return 0
+    halfnum = np.count_nonzero(seg1*seg2>0) 
+    denom = np.sum(Z)
+    dice_value = 2*halfnum/denom
+    return dice_value
+
 
 #%% cv
 def cv(softmax_matrix):

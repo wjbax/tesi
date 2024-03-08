@@ -1,26 +1,77 @@
-import pandas as pd
+# piccolo appunto: entropy sum e entropy mean, cosi come cv sum e cv mean, sono matematicamente correlati
+# quindi Ã¨ inutile avere sia sum che mean
+
+#%% import
+import os
 import numpy as np
-from matplotlib import pyplot as plt
+import pandas as pd
+import metrics_v4 as m
+import matplotlib.pyplot as plt
+# import cv2
+import PIL.Image as Img
+from tqdm import tqdm
 from scipy import stats
+
 from sklearn import linear_model
 from sklearn.metrics import mean_squared_error, mean_absolute_error 
-from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
 
-#%%
+#%% functions
 def lin_regr(slope,x,intercept):
     return slope*x+intercept
 
+#%% PATH INITIALIZATION
+SOFTMAX_DIM = [416,416]
+GT_seg_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ segmentation)/Liver HE Steatosis (TEMP)/Liver HE Steatosis (TEMP)/DATASET/test/manual/"
+softmax_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ segmentation)/Liver HE Steatosis (TEMP)/Liver HE Steatosis (TEMP)/k-net+swin/TEST_2classes/RESULTS_MC/test/softmax/"
+seg_MC_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ segmentation)/Liver HE Steatosis (TEMP)/Liver HE Steatosis (TEMP)/k-net+swin/TEST_2classes/RESULTS/test/mask/"
 
-#%% ent for enthropy, cv for coefficient of variation
+#%%
+DATASET = np.zeros([50,3])
+i = 0
+for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
+    softmax_path = softmax_dir + GT_seg_name + "/"
+    seg_MC_path = seg_MC_dir + GT_seg_name
+    MC_softmax_list = os.listdir(softmax_path)
+    softmax_matrix = np.zeros([SOFTMAX_DIM[0],SOFTMAX_DIM[1],len(MC_softmax_list)])
+    counter = 0
+    for name in MC_softmax_list:
+        st = np.float32((np.load(softmax_path + name)['softmax'])[:,:,1])
+        softmax_matrix[:,:,counter] = np.copy(st)
+        counter += 1
+    
+    entropy_map = m.entropy(softmax_matrix)
+    entropy_sum = m.entropy_sum(entropy_map)
+    # entropy_mean = m.entropy_mean(entropy_map)
+    
+    cv_map = m.cv(softmax_matrix)
+    cv_sum = m.cv_sum(cv_map)
+    # cv_mean = m.cv_mean(cv_map)
+    
+    # seg_GT = cv2.imread(GT_seg_dir + GT_seg_name)
+    # seg_MC = cv2.imread(seg_MC_path)
+    pngseg_GT = Img.open(GT_seg_dir + GT_seg_name)
+    pngseg_MC = Img.open(seg_MC_path)
+    seg_GT = np.array(pngseg_GT)/255
+    seg_MC = np.array(pngseg_MC)/255
+    
+    DICE = m.dice(seg_GT,seg_MC)
+    
+    DATASET[i,0] = entropy_sum
+
+    DATASET[i,1] = cv_sum
+
+    DATASET[i,2] = DICE
+    
+    i += 1
+
+#%% DATAFRAME AND DATASET SPLIT
 path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/"
-filename = "DATASET_v2.csv"
-df = pd.read_csv(path+filename)
+df = pd.DataFrame(DATASET)
+df = df.rename(columns={0:'ent_sum',1:'cv_sum',2:'dice'})
+df.to_csv(path+"DATASET_v4.csv",index=False)
 
-temp = np.array(df)
-
-DATA = temp[:,[0,2,4]]
-
+#%%
+DATA = DATASET
 ent = DATA[:,0]
 cv = DATA[:,1]
 dice = DATA[:,2]
@@ -57,7 +108,7 @@ CLEAN_DATASET[:,1] = ccv
 CLEAN_DATASET[:,2] = cdice
 df = pd.DataFrame(CLEAN_DATASET)
 df = df.rename(columns={0:'ent_sum',1:'cv_sum',2:'dice'})
-df.to_csv(cd_path+"CLEAN_DATASET.csv",index=False)
+df.to_csv(cd_path+"CLEAN_DATASET_v4.csv",index=False)
 
 mcent = np.mean(cent)
 mccv = np.mean(ccv)
