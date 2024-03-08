@@ -27,6 +27,7 @@ seg_MC_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ 
 
 #%%
 DATASET = np.zeros([50,3])
+DATASET_ROE = []
 i = 0
 for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     softmax_path = softmax_dir + GT_seg_name + "/"
@@ -39,36 +40,46 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
         softmax_matrix[:,:,counter] = np.copy(st)
         counter += 1
     
-    entropy_map = m.entropy(softmax_matrix)
-    entropy_sum = m.entropy_sum(entropy_map)
-    # entropy_mean = m.entropy_mean(entropy_map)
+    # entropy_map = m.entropy(softmax_matrix)
+    # entropy_sum = m.entropy_sum(entropy_map)
+    # ##### entropy_mean = m.entropy_mean(entropy_map)
     
-    cv_map = m.cv(softmax_matrix)
-    cv_sum = m.cv_sum(cv_map)
-    # cv_mean = m.cv_mean(cv_map)
+    # cv_map = m.cv(softmax_matrix)
+    # cv_sum = m.cv_sum(cv_map)
+    ##### cv_mean = m.cv_mean(cv_map)
     
-    # seg_GT = cv2.imread(GT_seg_dir + GT_seg_name)
-    # seg_MC = cv2.imread(seg_MC_path)
-    pngseg_GT = Img.open(GT_seg_dir + GT_seg_name)
-    pngseg_MC = Img.open(seg_MC_path)
-    seg_GT = np.array(pngseg_GT)/255
-    seg_MC = np.array(pngseg_MC)/255
+    ##### seg_GT = cv2.imread(GT_seg_dir + GT_seg_name)
+    ##### seg_MC = cv2.imread(seg_MC_path)
+    # pngseg_GT = Img.open(GT_seg_dir + GT_seg_name)
+    # pngseg_MC = Img.open(seg_MC_path)
+    # seg_GT = np.array(pngseg_GT)/255
+    # seg_MC = np.array(pngseg_MC)/255
     
-    DICE = m.dice(seg_GT,seg_MC)
+    # DICE = m.dice(seg_GT,seg_MC)
     
-    DATASET[i,0] = entropy_sum
+    # DATASET[i,0] = entropy_sum
 
-    DATASET[i,1] = cv_sum
+    # DATASET[i,1] = cv_sum
 
-    DATASET[i,2] = DICE
+    # DATASET[i,2] = DICE
     
+    eom_map = m.eom_map(softmax_matrix)
+    roe_array = []
+    shape = np.shape(softmax_matrix)
+    for counter in range(shape[2]):
+        roe_array.append(m.rmse(eom_map,softmax_matrix[:,:,counter]))
+    roe_value = np.nanmean(roe_array)
+    DATASET_ROE.append(roe_value)
     i += 1
 
 #%% DATAFRAME AND DATASET SPLIT
 path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/"
 df = pd.DataFrame(DATASET)
 df = df.rename(columns={0:'ent_sum',1:'cv_sum',2:'dice'})
-df.to_csv(path+"DATASET_v4.csv",index=False)
+# df.to_csv(path+"DATASET_v4.csv",index=False)
+df_roe = pd.DataFrame(DATASET_ROE)
+df_roe = df_roe.rename(columns={0: "roe"})
+df_roe.to_csv(path+"ROE_v4.csv",index=False)
 
 #%%
 DATA = DATASET

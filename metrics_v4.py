@@ -65,3 +65,31 @@ def cv_sum(cv_map):
 
 def cv_mean(cv_map):
     return np.nanmean(cv_map)
+
+#%%
+#RMSE
+def rmse(softmax1,softmax2):
+    mse = np.mean((softmax1-softmax2)**2)
+    rmse_val = np.sqrt(mse)
+    return rmse_val
+
+#%% "error on mean"
+def eom_map(softmax_matrix):
+    shape = np.shape(softmax_matrix)
+    eom_map = np.zeros([shape[0],shape[1]])
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            ij_vector = softmax_matrix[i,j,:]
+            sum_ij_vector = np.nansum(ij_vector)
+            mu = sum_ij_vector/len(ij_vector)
+            # std = np.nanstd(ij_vector)
+            eom_map[i,j] = mu
+    return eom_map
+
+def rmse_on_eom(eom_map,softmax_matrix):
+    shape = np.shape(softmax_matrix)
+    roe_array = []
+    for counter in range(shape[2]):
+        roe_value = rmse(eom_map,softmax_matrix[:,:,counter])
+        roe_array.append(roe_value)
+    return np.nanmean(roe_array)
