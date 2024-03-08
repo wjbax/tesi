@@ -63,14 +63,14 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
 
     # DATASET[i,2] = DICE
     
-    eom_map = m.eom_map(softmax_matrix)
-    roe_array = []
-    shape = np.shape(softmax_matrix)
-    for counter in range(shape[2]):
-        roe_array.append(m.rmse(eom_map,softmax_matrix[:,:,counter]))
-    roe_value = np.nanmean(roe_array)
-    DATASET_ROE.append(roe_value)
-    i += 1
+    # eom_map = m.eom_map(softmax_matrix)
+    # roe_array = []
+    # shape = np.shape(softmax_matrix)
+    # for counter in range(shape[2]):
+    #     roe_array.append(m.rmse(eom_map,softmax_matrix[:,:,counter]))
+    # roe_value = np.nanmean(roe_array)
+    # DATASET_ROE.append(roe_value)
+    # i += 1
 
 #%% DATAFRAME AND DATASET SPLIT
 path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/"
@@ -79,7 +79,7 @@ df = df.rename(columns={0:'ent_sum',1:'cv_sum',2:'dice'})
 # df.to_csv(path+"DATASET_v4.csv",index=False)
 df_roe = pd.DataFrame(DATASET_ROE)
 df_roe = df_roe.rename(columns={0: "roe"})
-df_roe.to_csv(path+"ROE_v4.csv",index=False)
+# df_roe.to_csv(path+"ROE_v4.csv",index=False)
 
 #%%
 DATA = DATASET
@@ -119,7 +119,7 @@ CLEAN_DATASET[:,1] = ccv
 CLEAN_DATASET[:,2] = cdice
 df = pd.DataFrame(CLEAN_DATASET)
 df = df.rename(columns={0:'ent_sum',1:'cv_sum',2:'dice'})
-df.to_csv(cd_path+"CLEAN_DATASET_v4.csv",index=False)
+# df.to_csv(cd_path+"CLEAN_DATASET_v4.csv",index=False)
 
 mcent = np.mean(cent)
 mccv = np.mean(ccv)
