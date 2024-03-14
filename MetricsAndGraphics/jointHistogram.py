@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 #%%
-bins = 25
+bins = 50
 dataset_path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/CLEAN_DATASET_v4.csv"
 df = pd.read_csv(dataset_path)
 dataset_path_roe = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/ROE_v4.csv"

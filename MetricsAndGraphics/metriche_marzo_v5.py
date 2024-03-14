@@ -25,6 +25,26 @@ def cv_map(softmax_matrix):
             cv_map[i,j] = std/mu
     return cv_map
 
+# solo uno strato della softmax può essere inserito in questa funzione
+def entropy_map(softmax_matrix):
+    shape = np.shape(softmax_matrix)
+    entropy_map = np.zeros([shape[0],shape[1]])
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            ij_vector = softmax_matrix[i,j,:]
+            sum_ij_vector = sum(ij_vector)
+            ent = np.zeros(len(ij_vector))
+            for k in range(len(ij_vector)):
+                pt_k = (softmax_matrix[i,j,k])/sum_ij_vector
+                if pt_k == 0:
+                    ent[k] = np.nan
+                else:
+                    log_k = np.log2(pt_k)
+                    ent[k] = pt_k*log_k
+            entropy_map[i,j] = -np.nansum(ent)
+    return entropy_map
+
+
 #%%
 DIM = [416,416]
 GT_seg_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ segmentation)/Liver HE Steatosis (TEMP)/Liver HE Steatosis (TEMP)/DATASET/test/manual/"
@@ -35,8 +55,13 @@ seg_MC_dir = "D:/DATASET TESI/Bassolino (XAI-UQ segmentation)/Bassolino (XAI-UQ 
 #%%
 i = 0
 x_metrica_cv_map = []
+x_metrica_ent_map = []
 x_metrica_dice_multi = []
+mean_dice_for_image = []
+image_tracker = []
+
 for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
+    image_tracker.append(GT_seg_name)
     directory_seg_MC = seg_MC_dir+GT_seg_name +"/"
     directory_softmax_MC = softmax_dir+GT_seg_name+"/"
     softmax_matrix = np.zeros((DIM[0],DIM[1],2,20),dtype=np.float32)
@@ -69,13 +94,23 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     GT_cv = cv_map_temp * GT_mask
     x_metrica_cv_map.append(100*(GT_cv>0).sum()/(416*416))
     
+    # Creo ent_map
+    ent_map_temp = entropy_map(softmax_matrix)
+    GT_ent = ent_map_temp * GT_mask
+    x_metrica_ent_map.append(100*(GT_ent>0).sum()/(416*416))
+    
+    # Creo dice_mat_temp
     dice_mat_temp = -np.ones((20,20))
+    dice_array_GT = []
     for i in range(20):
         for j in range(i+1,20):
             dice_mat_temp[i,j] = m.dice(seg_matrix[:,:,i],seg_matrix[:,:,j])
+        dice_array_GT.append(m.dice(seg_matrix[:,:,i],GT_mask))
     dice_mat_temp[dice_mat_temp<0] = np.nan
     
+    
     x_metrica_dice_multi.append(np.nanstd(dice_mat_temp))
+    mean_dice_for_image.append(np.mean(dice_array_GT))
     # break
 
  #%%
