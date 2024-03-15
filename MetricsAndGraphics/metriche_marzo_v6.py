@@ -13,15 +13,9 @@ METRICS MARCH 2024 V6
 import os
 import numpy as np
 import pandas as pd
-import metrics_v4 as m
 import matplotlib.pyplot as plt
-# import cv2
 import PIL.Image as Img
 from tqdm import tqdm
-from scipy import stats
-
-from sklearn import linear_model
-from sklearn.metrics import mean_squared_error, mean_absolute_error 
 
 #%%
 def cv_map(softmax_matrix):
@@ -57,17 +51,31 @@ def entropy_map(softmax_matrix):
     return entropy_map
 
 def maxminscal(array):
-    MASSIMO = np.max(array)
-    minimo = np.min(array)
+    MASSIMO = np.nanmax(array)
+    minimo = np.nanmin(array)
     return (array-minimo)/(MASSIMO-minimo)
 
-def dice(seg1,seg2):
-    Z = seg1+seg2
-    if np.sum(Z) == 0: return 0
-    halfnum = np.count_nonzero(seg1*seg2>0) 
-    denom = np.sum(Z)
-    dice_value = 2*halfnum/denom
-    return dice_value
+# def dice(seg1,seg2):
+#     Z = seg1+seg2
+#     if np.sum(Z) == 0: return 0
+#     halfnum = np.count_nonzero(seg1*seg2>0) 
+#     denom = np.sum(Z)
+#     dice_value = 2*halfnum/denom
+#     return dice_value
+
+def dice(mask_automatic,mask_manual):
+    TP_mask = np.multiply(mask_automatic,mask_manual); TP = TP_mask.sum()
+    FP_mask = np.subtract(mask_automatic.astype(int),TP_mask.astype(int)).astype(bool); FP = FP_mask.sum()
+    FN_mask = np.subtract(mask_manual.astype(int),TP_mask.astype(int)).astype(bool); FN = FN_mask.sum()
+    # TN_mask = np.multiply(~mask_automatic,~mask_manual); TN = TN_mask.sum()
+    
+    if TP==0 and FN==0 and FP==0:
+        # jaccard_ind = np.nan
+        dice_ind = np.nan
+    else:
+        # jaccard_ind = TP/(TP+FP+FN)
+        dice_ind = 2*TP/(2*TP+FP+FN)
+    return dice_ind
 
 #%%
 DIM = [416,416]
@@ -85,6 +93,11 @@ mean_dice_for_image = []
 image_tracker = []
 x_metrica_cv_map_sum = []
 x_metrica_ent_map_sum = []
+
+dice_mat_tracker = -np.ones((20,20,50))
+softmax_matrix_tracker = np.zeros((416,416,2,20,50))
+seg_matrix_tracker = np.zeros((416,416,20,50))
+counter_tracker = 0
 
 for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     original_imagepng = Img.open(original_image_dir+GT_seg_name)
@@ -138,10 +151,12 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
         dice_array_GT.append(dice(seg_matrix[:,:,i],GT_mask))
     dice_mat_temp[dice_mat_temp<0] = np.nan
     
-    
     x_metrica_dice_multi.append(np.nanstd(dice_mat_temp))
     mean_dice_for_image.append(np.mean(dice_array_GT))
-
+    
+    dice_mat_tracker[:,:,counter_tracker] = dice_mat_temp
+    softmax_matrix_tracker[:,:,:,:,counter_tracker] = softmax_matrix
+    seg_matrix_tracker[:,:,:,counter_tracker] = seg_matrix
 
     path_to_save_figures = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/Figures/"
 
@@ -236,8 +251,12 @@ for GT_seg_name in tqdm(os.listdir(GT_seg_dir)):
     plt.colorbar()
     plt.show()
     plt.savefig(path_to_save_figures+"Dice_mat_figures/"+GT_seg_name)
+    plt.savefig(path_to_save_figures+GT_seg_name[:-4]+"_dice.png")
     plt.close()
+    
+    counter_tracker += 1
 
+dice_mat_tracker[dice_mat_tracker<0] = np.nan
 #%%
 
 #%% Saving of dataframes
@@ -246,9 +265,9 @@ metrics_df_path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/"
 index_array = np.arange(1,51)
 metrics_dict = {'index':index_array,
                 'image_tracker':image_tracker, 
-                'x_metrica_cv_map':x_metrica_cv_map,
+                # 'x_metrica_cv_map':x_metrica_cv_map,
                 'x_metrica_cv_map_sum':x_metrica_cv_map_sum,
-                'x_metrica_ent_map':x_metrica_ent_map,
+                # 'x_metrica_ent_map':x_metrica_ent_map,
                 'x_metrica_ent_map_sum':x_metrica_ent_map_sum,
                 'x_metrica_dice_multi':x_metrica_dice_multi,
                 'mean_dice_for_image':mean_dice_for_image}
@@ -257,61 +276,61 @@ metrics_df.to_csv(metrics_df_path+"metrics_v6.csv",index=False)
 
 #%%
 
-plt.figure(figsize=(40,10))
-plt.subplot(141).title.set_text("Metrica basata su CV")
-plt.plot(index_array,x_metrica_cv_map,'b')
-plt.subplot(142).title.set_text("Metrica basata su Entropy")
-plt.plot(index_array,x_metrica_ent_map,'tab:orange' )
-plt.subplot(143).title.set_text("Metrica basata su matrice dei dice")
-plt.plot(index_array,x_metrica_dice_multi,'g')
-plt.subplot(144).title.set_text("Overview metriche (normalizzate)")
-plt.plot(index_array,maxminscal(x_metrica_cv_map),'b')
-plt.plot(index_array,maxminscal(x_metrica_ent_map),'tab:orange')
-plt.plot(index_array,maxminscal(x_metrica_dice_multi),'g')
-plt.legend(['metrica cv_map','metrica ent_map','metrica_matrice_dice'],loc='upper right')
-plt.suptitle("Metriche per immagine",fontsize=16)
-plt.show()
-plt.savefig(metrics_df_path+"Metriche per immagine.png")
+# plt.figure(figsize=(40,10))
+# plt.subplot(141).title.set_text("Metrica basata su CV")
+# plt.plot(index_array,x_metrica_cv_map,'b')
+# plt.subplot(142).title.set_text("Metrica basata su Entropy")
+# plt.plot(index_array,x_metrica_ent_map,'tab:orange' )
+# plt.subplot(143).title.set_text("Metrica basata su matrice dei dice")
+# plt.plot(index_array,x_metrica_dice_multi,'g')
+# plt.subplot(144).title.set_text("Overview metriche (normalizzate)")
+# plt.plot(index_array,maxminscal(x_metrica_cv_map),'b')
+# plt.plot(index_array,maxminscal(x_metrica_ent_map),'tab:orange')
+# plt.plot(index_array,maxminscal(x_metrica_dice_multi),'g')
+# plt.legend(['metrica cv_map','metrica ent_map','metrica_matrice_dice'],loc='upper right')
+# plt.suptitle("Metriche per immagine",fontsize=16)
+# plt.show()
+# plt.savefig(metrics_df_path+"Metriche per immagine.png")
 
-plt.figure(figsize=(40,10))
-plt.subplot(141).title.set_text("Metrica basata su CV")
-plt.scatter(mean_dice_for_image,x_metrica_cv_map,c='b')
-plt.xlabel("Mean Dice (su 20)")
-plt.ylabel("Metrica basata su CV")
-plt.subplot(142).title.set_text("Metrica basata su Entropy")
-plt.scatter(mean_dice_for_image,x_metrica_ent_map,c='tab:orange')
-plt.xlabel("Mean Dice (su 20)")
-plt.ylabel("Metrica basata su Entropy")
-plt.subplot(143).title.set_text("Metrica basata su matrice dei dice")
-plt.scatter(mean_dice_for_image,x_metrica_dice_multi,c='g')
-plt.xlabel("Mean Dice (su 20)")
-plt.ylabel("Metrica basata su matrice dei dice")
-plt.subplot(144).title.set_text("Overview metriche (normalizzate)")
-plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_cv_map),c='b')
-plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_ent_map),c='tab:orange')
-plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_dice_multi),c='g')
-plt.xlabel("Mean Dice (su 20)")
-plt.legend(['metrica cv_map','metrica ent_map','metrica_matrice_dice'],loc='upper left')
-plt.suptitle("Scatterplot metriche x dice medio per immagine",fontsize=16)
-plt.show()
-plt.savefig(metrics_df_path+"Scatterplot metriche x dice medio.png")
+# plt.figure(figsize=(40,10))
+# plt.subplot(141).title.set_text("Metrica basata su CV")
+# plt.scatter(mean_dice_for_image,x_metrica_cv_map,c='b')
+# plt.xlabel("Mean Dice (su 20)")
+# plt.ylabel("Metrica basata su CV")
+# plt.subplot(142).title.set_text("Metrica basata su Entropy")
+# plt.scatter(mean_dice_for_image,x_metrica_ent_map,c='tab:orange')
+# plt.xlabel("Mean Dice (su 20)")
+# plt.ylabel("Metrica basata su Entropy")
+# plt.subplot(143).title.set_text("Metrica basata su matrice dei dice")
+# plt.scatter(mean_dice_for_image,x_metrica_dice_multi,c='g')
+# plt.xlabel("Mean Dice (su 20)")
+# plt.ylabel("Metrica basata su matrice dei dice")
+# plt.subplot(144).title.set_text("Overview metriche (normalizzate)")
+# plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_cv_map),c='b')
+# plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_ent_map),c='tab:orange')
+# plt.scatter(maxminscal(mean_dice_for_image),maxminscal(x_metrica_dice_multi),c='g')
+# plt.xlabel("Mean Dice (su 20)")
+# plt.legend(['metrica cv_map','metrica ent_map','metrica_matrice_dice'],loc='upper left')
+# plt.suptitle("Scatterplot metriche x dice medio per immagine",fontsize=16)
+# plt.show()
+# plt.savefig(metrics_df_path+"Scatterplot metriche x dice medio.png")
 
-plt.figure(figsize=(30,10))
-plt.subplot(131).title.set_text("Confronto CV / Entropy")
-plt.scatter(x_metrica_cv_map,x_metrica_ent_map)
-plt.xlabel("Metrica basata su CV")
-plt.ylabel("Metrica basata su Entropy")
-plt.subplot(132).title.set_text("Confronto CV / Dice Matrix")
-plt.scatter(x_metrica_cv_map,x_metrica_dice_multi)
-plt.xlabel("Metrica basata su CV")
-plt.ylabel("Metrica basata su matrice dei dice")
-plt.subplot(133).title.set_text("Confronto Dice Matrix / Entropy")
-plt.scatter(x_metrica_dice_multi,x_metrica_ent_map)
-plt.xlabel("Metrica basata su matrice dei dice")
-plt.ylabel("Metrica basata su Entropy")
-plt.suptitle("Confronto fra le tre metriche")
-plt.show()
-plt.savefig(metrics_df_path+"Confronto tra le metriche.png")
+# plt.figure(figsize=(30,10))
+# plt.subplot(131).title.set_text("Confronto CV / Entropy")
+# plt.scatter(x_metrica_cv_map,x_metrica_ent_map)
+# plt.xlabel("Metrica basata su CV")
+# plt.ylabel("Metrica basata su Entropy")
+# plt.subplot(132).title.set_text("Confronto CV / Dice Matrix")
+# plt.scatter(x_metrica_cv_map,x_metrica_dice_multi)
+# plt.xlabel("Metrica basata su CV")
+# plt.ylabel("Metrica basata su matrice dei dice")
+# plt.subplot(133).title.set_text("Confronto Dice Matrix / Entropy")
+# plt.scatter(x_metrica_dice_multi,x_metrica_ent_map)
+# plt.xlabel("Metrica basata su matrice dei dice")
+# plt.ylabel("Metrica basata su Entropy")
+# plt.suptitle("Confronto fra le tre metriche")
+# plt.show()
+# plt.savefig(metrics_df_path+"Confronto tra le metriche.png")
 
 #%%
 
@@ -370,3 +389,9 @@ plt.ylabel("Metrica basata su Entropy")
 plt.suptitle("Confronto fra le tre metriche")
 plt.show()
 plt.savefig(metrics_df_path+"Confronto tra le metriche _ sum.png")
+
+#%%
+mega_matrici_path = "C:/Users/willy/Desktop/Tesi_v2/tesi/data_saves/"
+np.save(mega_matrici_path+"dice_mat_tracker",dice_mat_tracker)              # dice_mat_tracker is [20,20,50]
+np.save(mega_matrici_path+"softmax_matrix_tracker",softmax_matrix_tracker)  # softmax_matrix_tracker is [416,416,2,20,50]
+np.save(mega_matrici_path+"seg_matrix_tracker",seg_matrix_tracker)          # seg_matrix_tracker is [416,416,20,50]
