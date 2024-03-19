@@ -1,0 +1,36 @@
+Dei grafici indicativi (ANCHE DI SEGMENTAZIONE) fare la presentazione come quella iniziale, che poi sarà da presentare per la tesi: mi devo prendere il tempo giusto per farlo. Devo lavorare sullo stato dell'arte per questa parte.
+
+è la presentazione che dovrò mettere nel capitolo della tesi che si chiama discussion (come fosse un paper): introduzione (il problema: rete black box incertezze ecc -> tutta la prima ricerca che ho fatto), materiali e metodi (materiali: dataset, spiegazione dei dataset; metodi: i metodi che ho utilizzato, cioè le reti usate, tutta la parte nel dettaglio relativa alle trasformazioni che ho fatto io, per poi arrivare ad avere un codice funzionale di pipeline che fa le trasformazioni e torna indietro; poi si fa un accenno allo studio dell'indicatore: calcolate le seguenti 3 metriche), risultati(qui si approfondisce, ad es cv non va bene bla bla bla poi si ricava l'indicatore che bla bla bla e i risultati son questi), disc e conclusione (revisione critica dello stato dell'arte per far capire che quello che abbiamo fatto è indicativo: QUI METTO CIO' CHE DEVO FARE: COME VALUTANO L'INCERTEZZA NELLO STATO DELL'ARTE; ANCHE METRICHE SEGMENTAZIONE; se metto pro e contro "gli faccio un favore"; per dire, una cosa importante è "questi valutano solo la segmentazione")
+
+In soldoni devo contestualizzare lo stato dell'arte. L'obiettivo è capire (e ci vuole un po': devo leggere i paper) come lo stato dell'arte valida. Alcuni x esempio calcolano i dice e lasciano cosi, noi "critichiamo" questa cosa perché facciamo di più.
+
+DIVIDERE SEMPRE EXPLAINABILITY E UNCERTAINTY -> nella conclusione io dirò che sarà incertezza, mentre all'inizio della tesi scriverò che explainability e incertezza non hanno una definizione coerente bla bla bla.
+
+Quando avrò finito, call!!
+
+Inizio a pensare a un titolo: 3 proposte di titoli in inglese. Devo evidenziare molto il lavoro fatto, non deve essere lungo lungo ma neanche corto corto.
+
+La prima consegna è la "richiesta conclusione tesi" per la sessione in cui mi voglio laureare: si carica solo titolo e abstract (max 3500 caratteri) che sono DEFINITIVI, la tesi è una bozza (nessuno le guarda)
+
+Nel momento in cui faccio il caricamento della "bozza", il politecnico ha un software di plagio; noi come gruppo non vogliamo che vada sopra il 10%. Pro e contro: se faccio la tesi in italiano ho vantaggio su questo, ma sticazzi si riesce comunque a stare sotto 10%.
+
+Termine iscrizione esame finale, ci saranno scadenze anche lì
+
+Poi c'è consegna definitiva della tesi in formato elettronico. Da regolamento in via ufficiale va caricata 7 giorni prima, in modo ufficioso anche 1 giorno prima aumma aumma. La presentazione non va caricata, va presentata il giorno della discussione, che verrà comunicato in avvisi bacheca: dura massimo 20 minuti, la regola più ferrea che c'è (limite sulle slide da ignorare, unico limite sul tempo)
+
+COME FUNZIONA IL PUNTEGGIO TOTALE?
+Alla media si possono aggiungere max 8 punti:
+- 4 punti per il lavoro di tesi (relatore e corelatore)
+- 3 punti per la presentazione e la difesa (assegnati dalla commissione di laurea)
+- 1 punto dalla segreteria
+
+
+
+----
+
+Devo organizzare una presentazione sullo stato dell'arte: da mail di Salvi per capire bene
+L'analisi critica la facciamo POST, è importante DESCRIVERE LO STATO DELL'ARTE GENERALE: studio x ha applicato metrica y in caso z, l'analisi critica la facciamo insieme. Sicuro al 90% che "noi non le faremo" perché son segmentazioni: noi dobbiamo riportare il contorno, abbamo fatto le cose in maniera conscia: la presentazione è per LA COMMISSIONE. NELLO STATO DELL'ARTE CI SONO X, Y, Z, NON SONO STATE FATTE PER QUESTI MOTIVI ecc. Abbiamo calcolato cv ma non va bene perché bla bla bla.
+L'importante è una presentazione che inquadri quello che c'è: leggo i paper iniziali, poi qualche paper nuovo, per inquadrare bene lo stato dell'arte.
+
+Mettere in ordine i codici cosi quando arrivano faccio run.
+

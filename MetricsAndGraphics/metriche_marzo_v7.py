@@ -41,7 +41,7 @@ def entropy_map(softmax_matrix):
     entropy_map = np.zeros([shape[0],shape[1]]).astype(float)
     for i in range(shape[0]):
         for j in range(shape[1]):
-            ij_vector = softmax_matrix[i,j,:]
+            ij_vector = softmax_matrix[i,j,1,:]
             entropy_map[i,j] = -(np.multiply(ij_vector[ij_vector!=0], np.log2(ij_vector[ij_vector!=0]))).sum()
     return entropy_map
 
