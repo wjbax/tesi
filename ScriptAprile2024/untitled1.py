@@ -81,7 +81,7 @@ def mask_generator_for_calcoli(SI_mask_C1,SI_mask_C2,uncert_map_C1,uncert_map_C2
     mask_auto_C2[mask_FP_C2] = False
     mask_auto_C2[mask_FN_C2] = True
     
-    mask_auto = mask_auto_C1*0.5+mask_auto_C2
+    # mask_auto = mask_auto_C1*0.5+mask_auto_C2
     
     return mask_auto_C1,mask_auto_C2
 
