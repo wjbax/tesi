@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri May 24 16:09:41 2024
+Created on Sun May 26 23:02:07 2024
 
 @author: willy
 """
 
-# %% IMPORT
 import os
 import numpy as np
 import pandas as pd
@@ -347,8 +346,7 @@ uncertainty_metric = {
 for p in uncertainty_metric:
     print(uncertainty_metric[p]['name'])
 
-
-#%%
+#%% mega ciclo for
 immagini_in_cui_migliora_il_dice=0
 lista_img_in_cui_migliora_il_dice=[]
 for dataset in tqdm(dataset_dict):
@@ -360,126 +358,85 @@ for dataset in tqdm(dataset_dict):
         if not os.path.isdir(subset_save_path):
             os.makedirs(subset_save_path)
         
-        for name in image_list:
-            
-    #% IMMAGINE DI PROVA: mask_avg_PERT
-                        
-            # name = '1004338_1.png'
+        for name in tqdm(image_list):
             original_image_path = dataset_dict[dataset]['path_ds'] + \
                             subset+"/image/" + name
             GT_mask_path = dataset_dict[dataset]['path_ds'] + \
                 subset+"/manual/" + name
             SI_mask_path = dataset_dict[dataset]['path_ks'] + \
                 "RESULTS/"+subset+"/mask/"+name
-            
+
             PERT_path_20_seg = dataset_dict[dataset]['path_ks'] + \
                 '/RESULTS_perturbation/'+subset+'/mask/' + name + "/"
             PERT_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
                 '/RESULTS_perturbation/'+subset+'/softmax/' + name + "/"
-            
-            MC_path_20_seg = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_MC/'+subset+'/mask/' + name + "/"
-            MC_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
-            
-            save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V4/"+dataset+"/"+subset+"/"+name+"/"
-            if not os.path.isdir(save_path):
-                os.makedirs(save_path)
-            
+                
             original_image = np.array(Img.open(original_image_path))
-            
             GT_mask_orig = np.array(Img.open(GT_mask_path))/255
-            
-            if GT_mask_orig.sum()==0: continue
-            
             SI_mask_orig = np.array(Img.open(SI_mask_path))/255
             
+            if np.sum(GT_mask_orig) == 0: continue
+
             GT_mask_C1, GT_mask_C2 = mask_splitter(GT_mask_orig)
             SI_mask_C1, SI_mask_C2 = mask_splitter(SI_mask_orig)
-            
+
             DIM = np.shape(GT_mask_orig)
             N = 20
             c = 3
-            
+
             softmax_matrix_PERT = softmax_matrix_gen(
                 PERT_path_20_softmax, DIM, c, N)
-            softmax_matrix_MC = softmax_matrix_gen(
-                MC_path_20_softmax, DIM, c, N)
-            
-            # mask_avg_PERT = mask_avg_gen(softmax_matrix_PERT)
-            # mask_avg_PERT_C1, mask_avg_PERT_C2 = mask_splitter(mask_avg_PERT)
-            
-            # mask_avg_MC = mask_avg_gen(softmax_matrix_MC)
-            # mask_avg_MC_C1, mask_avg_MC_C2 = mask_splitter(mask_avg_MC)
-            
-            
-            # IMMAGINE DI PROVA: bin_ent_map su 2C
-            # name = '1004338_1.png'
-            # dataset = 'Liver HE steatosis 2c'
+
+            #%% Creazione Mask AVG e Mask Union
+            softmax_avg_PERT = np.mean(softmax_matrix_PERT, axis=-1)
+            mask_avg_PERT = np.argmax(softmax_avg_PERT,axis=-1)
+            mask_avg_C1_PERT, mask_avg_C2_PERT = mask_splitter(mask_avg_PERT/2)
+
+            mask_union_matrix = np.argmax(softmax_matrix_PERT, axis=2)
+            mask_union_PERT = np.sum(mask_union_matrix, axis=-1)
+            mask_union_PERT[mask_union_PERT>0] = 1
+
+            #%%
             original_image_path = LS_2c_dict['path_ds'] + \
                             subset+"/image/" + name
             GT_mask_path = LS_2c_dict['path_ds'] + \
                 subset+"/manual/" + name
             SI_mask_path = LS_2c_dict['path_ks'] + \
                 "RESULTS/"+subset+"/mask/"+name
-            
+
             PERT_path_20_seg_2c = LS_2c_dict['path_ks'] + \
                 '/RESULTS_perturbation/'+subset+'/mask/' + name + "/"
             PERT_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
                 '/RESULTS_perturbation/'+subset+'/softmax/' + name + "/"
-            
+
             MC_path_20_seg_2c = LS_2c_dict['path_ks'] + \
                 '/RESULTS_MC/'+subset+'/mask/' + name + "/"
             MC_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
                 '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
-            
-            save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V4/"+dataset+"/"+subset+"/"+name+"/"
+
+            save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V5/"+dataset+"/"+subset+"/"+name+"/"
             if not os.path.isdir(save_path):
                 os.makedirs(save_path)
-            
+
             original_image_2c = np.array(Img.open(original_image_path))
-            
             GT_mask_orig_2c = np.array(Img.open(GT_mask_path))/255
             SI_mask_orig_2c = np.array(Img.open(SI_mask_path))/255
-            
-            # GT_mask_C1, GT_mask_C2 = mask_splitter(GT_mask_orig)
-            # SI_mask_C1, SI_mask_C2 = mask_splitter(SI_mask_orig)
-            
+
             DIM = np.shape(GT_mask_orig_2c)
             N = 20
             c = 2
-            
+
             softmax_matrix_PERT_2c = softmax_matrix_gen(
                 PERT_path_20_softmax, DIM, c, N)
-            softmax_matrix_MC_2c = softmax_matrix_gen(
-                MC_path_20_softmax, DIM, c, N)
-            
-            bin_ent_map_PERT_2c = binary_entropy_map(softmax_matrix_PERT_2c[:,:,1,:])
-            bin_ent_map_MC_2c = binary_entropy_map(softmax_matrix_MC_2c[:,:,1,:])
 
-            DIM = np.shape(GT_mask_orig)
-            N = 20
-            c = 3
-            
-            softmax_matrix_PERT_3c = softmax_matrix_gen(
-                PERT_path_20_softmax, DIM, c, N)
-            softmax_matrix_MC_3c = softmax_matrix_gen(
-                MC_path_20_softmax, DIM, c, N)
-            
-            seg_matrix_PERT = seg_matrix_gen(PERT_path_20_seg_2c, DIM, N)
-            seg_matrix_MC = seg_matrix_gen(MC_path_20_seg_2c, DIM, N)
-            
-            mask_unione_PERT = np.sum(seg_matrix_PERT, axis=-1)
-            mask_unione_PERT[mask_unione_PERT>0] = 1
-    
-            mean_softmax_matrix_PERT_3c = np.mean(softmax_matrix_PERT_3c,axis=-1)
-            temp_classe_2 = np.copy(mean_softmax_matrix_PERT_3c[:,:,2])
-            temp_classe_2[SI_mask_C1>0] = 0
-            mean_softmax_matrix_PERT_3c[:,:,2] = np.copy(temp_classe_2)
-            mask_avg_PERT = np.argmax(mean_softmax_matrix_PERT_3c, axis=-1)
-            mask_avg_PERT_C1, mask_avg_PERT_C2 = mask_splitter(mask_avg_PERT)
-            
-            label_image_PERT = measure.label(mask_avg_PERT_C2)
+            softmax_matrix_PERT_2c[:,:,1,:][GT_mask_C1>0] = 0
+            bin_ent_map_PERT_2c = binary_entropy_map(softmax_matrix_PERT_2c[:,:,1,:])
+            BRUM = copy.deepcopy(bin_ent_map_PERT_2c)
+
+            #%% Regionprops FARE ANCHE SU SINGLE INFERENCE PER SFIZIO
+            # MASK_TO_USE_TO_REDUCE = SI_mask_C2
+            MASK_TO_USE_TO_REDUCE = mask_avg_C2_PERT
+            label_image_PERT = measure.label(MASK_TO_USE_TO_REDUCE)
             n_objects_PERT = label_image_PERT.max()
             masks_matrix_PERT = np.zeros([label_image_PERT.shape[0],label_image_PERT.shape[1],n_objects_PERT])
             unc_map_matrix_PERT = np.copy(masks_matrix_PERT)
@@ -492,32 +449,29 @@ for dataset in tqdm(dataset_dict):
                 if max_mask == 0: max_mask = 1
                 current_mask = current_mask/max_mask
                 masks_matrix_PERT[:,:,i] = current_mask
-                unc_map_matrix_PERT = current_mask*bin_ent_map_PERT_2c
+                unc_map_matrix_PERT = current_mask*BRUM
                 tau_i = np.nanmean(unc_map_matrix_PERT[unc_map_matrix_PERT>0])
                 tau_array_PERT.append(tau_i)
                 del current_mask
-            
-            # print(n_objects_PERT)
-            
+                
+            #%% Loop con threshold
             array_PERT = copy.deepcopy(tau_array_PERT)
             array_PERT = np.array(array_PERT)
             th_range = np.array(range(0,100,1))/100
-            
+            # th_range = np.array(range(0,10,1))/10
+
             # 3 strade sono:
             # dice mask_th mask_avg 
             # dice mask_th SI
             # dice mask_th mask_unione
-            
-            
+
             dice_array_PERT_mask_avg=[]
             dice_array_PERT_SI=[]
             dice_array_PERT_mask_unione=[]
             counter = 0
             masks_of_masks_PERT = np.zeros((DIM[0],DIM[1],len(th_range)))
-            
-            # GT_to_consider = GT_mask_C1
-            # GT_to_consider = GT_mask_orig_2c
-            
+            SI_dice = dice(SI_mask_orig_2c,GT_mask_orig_2c)
+
             for th in th_range:
                 array_PERT_temp = copy.deepcopy(array_PERT)
                 array_PERT_temp[array_PERT>th] = 0
@@ -528,14 +482,11 @@ for dataset in tqdm(dataset_dict):
                 SI_reduced = np.zeros_like(SI_mask_C2)
                 SI_reduced[mask_th>0] = SI_mask_C2[mask_th>0]
                 
+                mask_avg_reduced = np.zeros_like(mask_avg_C2_PERT)
+                mask_avg_reduced[mask_th>0] = mask_avg_C2_PERT[mask_th>0]
                 
-                mask_avg_reduced = np.zeros_like(mask_avg_PERT_C2)
-                mask_avg_reduced[mask_th>0] = mask_avg_PERT_C2[mask_th>0]
-                
-                
-                mask_unione_reduced = np.zeros_like(mask_unione_PERT)
-                mask_unione_reduced[mask_th>0] = mask_unione_PERT[mask_th>0]
-                
+                mask_unione_reduced = np.zeros_like(mask_union_PERT)
+                mask_unione_reduced[mask_th>0] = mask_union_PERT[mask_th>0]
                 
                 dice_th_mask_avg = dice(mask_avg_reduced,GT_mask_orig_2c)
                 dice_array_PERT_mask_avg.append(dice_th_mask_avg)
@@ -546,13 +497,39 @@ for dataset in tqdm(dataset_dict):
                 dice_th_mask_unione = dice(mask_unione_reduced,GT_mask_orig_2c)
                 dice_array_PERT_mask_unione.append(dice_th_mask_unione)
                 
+                if (dice_th_mask_unione>SI_dice or dice_th_mask_avg>SI_dice or dice_th_SI>SI_dice):
+                    plt.figure(figsize=(15,15))
+                    plt.suptitle("PERT - dice = " + str(SI_dice) + " - TH = " + str(th))
+                    plt.subplot(221)
+                    plt.title("Ground Truth")
+                    plt.imshow(GT_mask_orig_2c)
+                    plt.subplot(222)
+                    plt.title("MASK_AVG_REDUCED - dice " + str(dice_th_mask_avg))
+                    plt.imshow(mask_avg_reduced)
+                    plt.subplot(223)
+                    plt.title("mask_unione_reduced - dice " + str(dice_th_mask_unione))
+                    plt.imshow(mask_unione_reduced)
+                    plt.subplot(224)
+                    plt.title("SI_reduced - dice " + str(dice_th_SI))
+                    plt.imshow(SI_reduced)    
+                    plt.savefig(save_path + "PERT_TH=" + str(th) + ".png")
+                    plt.close()
+                    print("Immagine " + name + " ha cose belle")
+                counter += 1 
                 
-                counter += 1
-                # if np.sum(mask_th)>0: break
 
 
-#%%
-            SI_dice = dice(SI_mask_orig_2c,GT_mask_orig_2c)
+            dice_array_PERT_mask_avg = np.array(dice_array_PERT_mask_avg)
+            miglioramento_PERT_mask_avg = np.where(dice_array_PERT_mask_avg>SI_dice)[0]
+            # print(miglioramento_PERT_mask_avg)
+
+            dice_array_PERT_SI = np.array(dice_array_PERT_SI)
+            miglioramento_PERT_SI = np.where(dice_array_PERT_SI>SI_dice)[0]
+            # print(miglioramento_PERT_SI)
+
+            dice_array_PERT_mask_unione = np.array(dice_array_PERT_mask_unione)
+            miglioramento_PERT_mask_unione = np.where(dice_array_PERT_mask_unione>SI_dice)[0]
+            # print(miglioramento_PERT_mask_unione)
             
             dice_array_PERT_mask_avg = np.array(dice_array_PERT_mask_avg)
             miglioramento_PERT_mask_avg = np.where(dice_array_PERT_mask_avg>SI_dice)[0]
@@ -644,22 +621,95 @@ for dataset in tqdm(dataset_dict):
                 lista_img_in_cui_migliora_il_dice.append(lista_temp_PERT)
                 print("E' MIGLIORATA L'IMMAGINE " + name + " DEL SUBSET " + subset + " - union mask")
                 np.save(save_path+"matrice_delle_maschere_PERT_per_union_mask",masks_of_masks_PERT)
-            # break
+                
             
-            # break
-    
+            
+            
+            # DA QUI FARE MC
+            
+            
+            
+            
+            
+            
+            
+            
+            original_image_path = dataset_dict[dataset]['path_ds'] + \
+                            subset+"/image/" + name
+            GT_mask_path = dataset_dict[dataset]['path_ds'] + \
+                subset+"/manual/" + name
+            SI_mask_path = dataset_dict[dataset]['path_ks'] + \
+                "RESULTS/"+subset+"/mask/"+name
+
+            MC_path_20_seg = dataset_dict[dataset]['path_ks'] + \
+                '/RESULTS_MC/'+subset+'/mask/' + name + "/"
+            MC_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
+                '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
+                
+            original_image = np.array(Img.open(original_image_path))
+            GT_mask_orig = np.array(Img.open(GT_mask_path))/255
+            SI_mask_orig = np.array(Img.open(SI_mask_path))/255
+
+            GT_mask_C1, GT_mask_C2 = mask_splitter(GT_mask_orig)
+            SI_mask_C1, SI_mask_C2 = mask_splitter(SI_mask_orig)
+
+            DIM = np.shape(GT_mask_orig)
+            N = 20
+            c = 3
+
+            softmax_matrix_MC = softmax_matrix_gen(
+                MC_path_20_softmax, DIM, c, N)
+
+            #%% Creazione Mask AVG e Mask Union
+            softmax_avg_MC = np.mean(softmax_matrix_MC, axis=-1)
+            mask_avg_MC = np.argmax(softmax_avg_MC,axis=-1)
+            mask_avg_C1_MC, mask_avg_C2_MC = mask_splitter(mask_avg_MC/2)
+
+            mask_union_matrix = np.argmax(softmax_matrix_MC, axis=2)
+            mask_union_MC = np.sum(mask_union_matrix, axis=-1)
+            mask_union_MC[mask_union_MC>0] = 1
+
             #%%
-            mask_unione_MC = np.sum(seg_matrix_MC, axis=-1)
-            mask_unione_MC[mask_unione_MC>0] = 1
-    
-            mean_softmax_matrix_MC_3c = np.mean(softmax_matrix_MC_3c,axis=-1)
-            temp_classe_2 = np.copy(mean_softmax_matrix_MC_3c[:,:,2])
-            temp_classe_2[SI_mask_C1>0] = 0
-            mean_softmax_matrix_MC_3c[:,:,2] = np.copy(temp_classe_2)
-            mask_avg_MC = np.argmax(mean_softmax_matrix_MC_3c, axis=-1)
-            mask_avg_MC_C1, mask_avg_MC_C2 = mask_splitter(mask_avg_MC)
-            
-            label_image_MC = measure.label(mask_avg_MC_C2)
+            original_image_path = LS_2c_dict['path_ds'] + \
+                            subset+"/image/" + name
+            GT_mask_path = LS_2c_dict['path_ds'] + \
+                subset+"/manual/" + name
+            SI_mask_path = LS_2c_dict['path_ks'] + \
+                "RESULTS/"+subset+"/mask/"+name
+
+            MC_path_20_seg_2c = LS_2c_dict['path_ks'] + \
+                '/RESULTS_MCurbation/'+subset+'/mask/' + name + "/"
+            MC_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
+                '/RESULTS_MCurbation/'+subset+'/softmax/' + name + "/"
+
+            MC_path_20_seg_2c = LS_2c_dict['path_ks'] + \
+                '/RESULTS_MC/'+subset+'/mask/' + name + "/"
+            MC_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
+                '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
+
+            save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V5/"+dataset+"/"+subset+"/"+name+"/"
+            if not os.path.isdir(save_path):
+                os.makedirs(save_path)
+
+            original_image_2c = np.array(Img.open(original_image_path))
+            GT_mask_orig_2c = np.array(Img.open(GT_mask_path))/255
+            SI_mask_orig_2c = np.array(Img.open(SI_mask_path))/255
+
+            DIM = np.shape(GT_mask_orig_2c)
+            N = 20
+            c = 2
+
+            softmax_matrix_MC_2c = softmax_matrix_gen(
+                MC_path_20_softmax, DIM, c, N)
+
+            softmax_matrix_MC_2c[:,:,1,:][GT_mask_C1>0] = 0
+            bin_ent_map_MC_2c = binary_entropy_map(softmax_matrix_MC_2c[:,:,1,:])
+            BRUM = copy.deepcopy(bin_ent_map_MC_2c)
+
+            #%% Regionprops FARE ANCHE SU SINGLE INFERENCE PER SFIZIO
+            # MASK_TO_USE_TO_REDUCE = SI_mask_C2
+            MASK_TO_USE_TO_REDUCE = mask_avg_C2_MC
+            label_image_MC = measure.label(MASK_TO_USE_TO_REDUCE)
             n_objects_MC = label_image_MC.max()
             masks_matrix_MC = np.zeros([label_image_MC.shape[0],label_image_MC.shape[1],n_objects_MC])
             unc_map_matrix_MC = np.copy(masks_matrix_MC)
@@ -672,31 +722,29 @@ for dataset in tqdm(dataset_dict):
                 if max_mask == 0: max_mask = 1
                 current_mask = current_mask/max_mask
                 masks_matrix_MC[:,:,i] = current_mask
-                unc_map_matrix_MC = current_mask*bin_ent_map_MC_2c
+                unc_map_matrix_MC = current_mask*BRUM
                 tau_i = np.nanmean(unc_map_matrix_MC[unc_map_matrix_MC>0])
                 tau_array_MC.append(tau_i)
                 del current_mask
-            
-            # print(n_objects_MC)
+                
+            #%% Loop con threshold
             array_MC = copy.deepcopy(tau_array_MC)
             array_MC = np.array(array_MC)
             th_range = np.array(range(0,100,1))/100
-            
+            # th_range = np.array(range(0,10,1))/10
+
             # 3 strade sono:
             # dice mask_th mask_avg 
             # dice mask_th SI
             # dice mask_th mask_unione
-            
-            
+
             dice_array_MC_mask_avg=[]
             dice_array_MC_SI=[]
             dice_array_MC_mask_unione=[]
             counter = 0
             masks_of_masks_MC = np.zeros((DIM[0],DIM[1],len(th_range)))
-            
-            # GT_to_consider = GT_mask_C1
-            # GT_to_consider = GT_mask_orig_2c
-            
+            SI_dice = dice(SI_mask_orig_2c,GT_mask_orig_2c)
+
             for th in th_range:
                 array_MC_temp = copy.deepcopy(array_MC)
                 array_MC_temp[array_MC>th] = 0
@@ -707,31 +755,54 @@ for dataset in tqdm(dataset_dict):
                 SI_reduced = np.zeros_like(SI_mask_C2)
                 SI_reduced[mask_th>0] = SI_mask_C2[mask_th>0]
                 
+                mask_avg_reduced = np.zeros_like(mask_avg_C2_MC)
+                mask_avg_reduced[mask_th>0] = mask_avg_C2_MC[mask_th>0]
                 
-                mask_avg_reduced = np.zeros_like(mask_avg_MC_C2)
-                mask_avg_reduced[mask_th>0] = mask_avg_MC_C2[mask_th>0]
+                mask_unione_reduced = np.zeros_like(mask_union_MC)
+                mask_unione_reduced[mask_th>0] = mask_union_MC[mask_th>0]
                 
-                
-                mask_unione_reduced = np.zeros_like(mask_unione_MC)
-                mask_unione_reduced[mask_th>0] = mask_unione_MC[mask_th>0]
-                
-                
-                dice_th_mask_avg = dice(mask_avg_reduced,GT_mask_C2)
+                dice_th_mask_avg = dice(mask_avg_reduced,GT_mask_orig_2c)
                 dice_array_MC_mask_avg.append(dice_th_mask_avg)
                 
-                dice_th_SI = dice(SI_reduced,GT_mask_C2)
+                dice_th_SI = dice(SI_reduced,GT_mask_orig_2c)
                 dice_array_MC_SI.append(dice_th_SI)
                 
-                dice_th_mask_unione = dice(mask_unione_reduced,GT_mask_C2)
+                dice_th_mask_unione = dice(mask_unione_reduced,GT_mask_orig_2c)
                 dice_array_MC_mask_unione.append(dice_th_mask_unione)
                 
+                if (dice_th_mask_unione>SI_dice or dice_th_mask_avg>SI_dice or dice_th_SI>SI_dice):
+                    plt.figure(figsize=(15,15))
+                    plt.suptitle("MC - dice = " + str(SI_dice) + " - TH = " + str(th))
+                    plt.subplot(221)
+                    plt.title("Ground Truth")
+                    plt.imshow(GT_mask_orig_2c)
+                    plt.subplot(222)
+                    plt.title("MASK_AVG_REDUCED - dice " + str(dice_th_mask_avg))
+                    plt.imshow(mask_avg_reduced)
+                    plt.subplot(223)
+                    plt.title("mask_unione_reduced - dice " + str(dice_th_mask_unione))
+                    plt.imshow(mask_unione_reduced)
+                    plt.subplot(224)
+                    plt.title("SI_reduced - dice " + str(dice_th_SI))
+                    plt.imshow(SI_reduced)    
+                    plt.savefig(save_path + "MC_TH=" + str(th) + ".png")
+                    plt.close()
+                    print("Immagine " + name + " ha cose belle")
+                counter += 1 
                 
-                counter += 1
-                # if np.sum(mask_th)>0: break
 
 
-#%%
-            SI_dice = dice(SI_mask_orig_2c,GT_mask_C2)
+            dice_array_MC_mask_avg = np.array(dice_array_MC_mask_avg)
+            miglioramento_MC_mask_avg = np.where(dice_array_MC_mask_avg>SI_dice)[0]
+            # print(miglioramento_MC_mask_avg)
+
+            dice_array_MC_SI = np.array(dice_array_MC_SI)
+            miglioramento_MC_SI = np.where(dice_array_MC_SI>SI_dice)[0]
+            # print(miglioramento_MC_SI)
+
+            dice_array_MC_mask_unione = np.array(dice_array_MC_mask_unione)
+            miglioramento_MC_mask_unione = np.where(dice_array_MC_mask_unione>SI_dice)[0]
+            # print(miglioramento_MC_mask_unione)
             
             dice_array_MC_mask_avg = np.array(dice_array_MC_mask_avg)
             miglioramento_MC_mask_avg = np.where(dice_array_MC_mask_avg>SI_dice)[0]
@@ -823,19 +894,4 @@ for dataset in tqdm(dataset_dict):
                 lista_img_in_cui_migliora_il_dice.append(lista_temp_MC)
                 print("E' MIGLIORATA L'IMMAGINE " + name + " DEL SUBSET " + subset + " - union mask")
                 np.save(save_path+"matrice_delle_maschere_MC_per_union_mask",masks_of_masks_MC)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+                

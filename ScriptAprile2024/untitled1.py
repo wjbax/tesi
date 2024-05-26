@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat May 11 14:33:42 2024
+Created on Sun May 26 21:24:42 2024
 
 @author: willy
 """
 
-# %% IMPORT
 import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import PIL.Image as Img
 from tqdm import tqdm
+from skimage import measure
+import copy
 
 # %% PRIMARY FUNCTIONS
 
@@ -95,9 +96,15 @@ def mask_splitter(mask):
     mask_C2[mask_C2 > 0] = 1
     return mask_C1, mask_C2
 
+def mask_avg_gen(softmax_matrix):
+    temp = np.argmax(np.mean(softmax_matrix,axis=-1),axis=-1)
+    if temp.max() > 1: 
+        mask_avg = temp/2
+    else:
+        mask_avg = temp
+    return mask_avg
 # %% MEGAMATRIX GENERATION
 # Softmax matrix generator
-
 
 def softmax_matrix_gen(softmax_path, DIM, c, N):
     softmax_matrix = np.zeros((DIM[0], DIM[1], c, N), dtype=np.float32)
@@ -111,7 +118,6 @@ def softmax_matrix_gen(softmax_path, DIM, c, N):
     return softmax_matrix
 
 # Seg Matrix generator
-
 
 def seg_matrix_gen(mask_path, DIM, N):
     seg_matrix = np.zeros((DIM[0], DIM[1], N))
@@ -276,6 +282,12 @@ def unc_maps_plots(
 original_dataset_path = "D:/DATASET_Tesi_marzo2024/"
 list_of_dataset = os.listdir(original_dataset_path)
 
+LS_2c_dict = {
+    'path_ds': original_dataset_path + list_of_dataset[0] + "/DATASET_2classes/",
+    'path_ks': original_dataset_path + list_of_dataset[0] + "/k-net+swin/TEST_2classes/",
+    'path_GT': "/manual/"
+}
+
 LS_3c_dict = {
     'path_ds': original_dataset_path + list_of_dataset[0] + "/DATASET_3classes/",
     'path_ks': original_dataset_path + list_of_dataset[0] + "/k-net+swin/TEST_3classes/",
@@ -284,329 +296,259 @@ LS_3c_dict = {
     'C2_name': 'Class 2'
 }
 
-RG_dict = {
-    'path_ds': original_dataset_path + list_of_dataset[1] + "/DATASET/",
-    'path_ks': original_dataset_path + list_of_dataset[1] + "/k-net+swin/TEST/",
-    'path_GT': "/manual/",
-    'C1_name': 'Healthy',
-    'C2_name': 'Sclerotic'
-}
+# RG_dict = {
+#     'path_ds': original_dataset_path + list_of_dataset[1] + "/DATASET/",
+#     'path_ks': original_dataset_path + list_of_dataset[1] + "/k-net+swin/TEST/",
+#     'path_GT': "/manual/",
+#     'C1_name': 'Healthy',
+#     'C2_name': 'Sclerotic'
+# }
 
-RT_dict = {
-    'path_ds': original_dataset_path + list_of_dataset[2] + "/DATASET/",
-    'path_ks': original_dataset_path + list_of_dataset[2] + "/k-net+swin/TEST/",
-    'path_GT': "/manual/",
-    'C1_name': 'Healthy',
-    'C2_name': 'Atro'
-}
+# RT_dict = {
+#     'path_ds': original_dataset_path + list_of_dataset[2] + "/DATASET/",
+#     'path_ks': original_dataset_path + list_of_dataset[2] + "/k-net+swin/TEST/",
+#     'path_GT': "/manual/",
+#     'C1_name': 'Healthy',
+#     'C2_name': 'Atro'
+# }
 
 dataset_dict = {
     # 'Liver HE steatosis 2c': LS_2c_dict,
-    'Liver HE steatosis 3c': LS_3c_dict,
-    'Renal PAS glomeruli': RG_dict,
-    'Renal PAS tubuli': RT_dict
+    'Liver HE steatosis 3c': LS_3c_dict
+#     'Renal PAS glomeruli': RG_dict,
+#     'Renal PAS tubuli': RT_dict
 }
 
-# %% P R O V A
-# dataset = 'Renal PAS tubuli'
-# subset = 'test'
-# name = '1004761_2.png'
 
-for dataset in tqdm(dataset_dict):
-    for subset in tqdm(['val', 'test']):
-        if subset == 'test': continue
-        image_list = os.listdir(
-            dataset_dict[dataset]['path_ds']+subset+"/"+dataset_dict[dataset]['path_GT'])
-        subset_save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V3/"+dataset+"/"+subset+"/"
-        if not os.path.isdir(subset_save_path):
-            os.makedirs(subset_save_path)
+#%%
 
-        mean_MC_dice_C1 = []
-        mean_PERT_dice_C1 = []
-        mean_MC_dice_C2 = []
-        mean_PERT_dice_C2 = []
-        SI_dice_array_C1 = []
-        SI_dice_array_C2 = []
-        
-        bin_sum_array_MC_C1 = []
-        sha_sum_array_MC_C1 = []
-        std_sum_array_MC_C1 = []
-        dmat_mean_array_MC_C1 = []
-        dmat_std_array_MC_C1 = []
-        
-        bin_sum_array_MC_C2 = []
-        sha_sum_array_MC_C2 = []
-        std_sum_array_MC_C2 = []
-        dmat_mean_array_MC_C2 = []
-        dmat_std_array_MC_C2 = []
-        
-        bin_sum_array_PERT_C1 = []
-        sha_sum_array_PERT_C1 = []
-        std_sum_array_PERT_C1 = []
-        dmat_mean_array_PERT_C1 = []
-        dmat_std_array_PERT_C1 = []
-        
-        bin_sum_array_PERT_C2 = []
-        sha_sum_array_PERT_C2 = []
-        std_sum_array_PERT_C2 = []
-        dmat_mean_array_PERT_C2 = []
-        dmat_std_array_PERT_C2 = []
-        
-        dice_GTSI_C1_array = []
-        dice_GTSI_C2_array = []
-        
-        th_max_dice_per_image_MC_C1 = []
-        th_max_dice_per_image_MC_C2 = []
-        th_max_dice_per_image_PERT_C1 = []
-        th_max_dice_per_image_PERT_C2 = []
-        
-        th_max_precision_per_image_MC_C1 = []
-        th_max_precision_per_image_MC_C2 = []
-        th_max_precision_per_image_PERT_C1 = []
-        th_max_precision_per_image_PERT_C2 = []
-        
-        th_max_recall_per_image_MC_C1 = []
-        th_max_recall_per_image_MC_C2 = []
-        th_max_recall_per_image_PERT_C1 = []
-        th_max_recall_per_image_PERT_C2 = []
+sha_ent = {
+    'name': 'sha_ent_',
+    'function': shannon_entropy_map
+    }
 
-        count_image = 0
-        for name in tqdm(image_list):
-            # %% Inizializzazione path e immagini importanti
-            original_image_path = dataset_dict[dataset]['path_ds'] + \
+bin_ent = {
+    'name': 'bin_ent_',
+    'function': binary_entropy_map
+    }
+
+std_sum = {
+    'name': 'std_map_',
+    'function': std_map
+    }
+
+uncertainty_metric = {
+    'sha_ent' : sha_ent,
+    'std_sum' : std_sum,
+    'bin_ent' : bin_ent
+    }
+
+for p in uncertainty_metric:
+    print(uncertainty_metric[p]['name'])
+
+#%% NOME IMMAGINE, PATHS PER IMMAGINE
+dataset = 'Liver HE steatosis 3c'
+subset = 'val'
+name = '1004546_22.png'
+# name = '1004338_1.png'
+original_image_path = dataset_dict[dataset]['path_ds'] + \
                 subset+"/image/" + name
-            GT_mask_path = dataset_dict[dataset]['path_ds'] + \
-                subset+"/manual/" + name
-            SI_mask_path = dataset_dict[dataset]['path_ks'] + \
-                "RESULTS/"+subset+"/mask/"+name
+GT_mask_path = dataset_dict[dataset]['path_ds'] + \
+    subset+"/manual/" + name
+SI_mask_path = dataset_dict[dataset]['path_ks'] + \
+    "RESULTS/"+subset+"/mask/"+name
 
-            PERT_path_20_seg = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_perturbation/'+subset+'/mask/' + name + "/"
-            PERT_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_perturbation/'+subset+'/softmax/' + name + "/"
+PERT_path_20_seg = dataset_dict[dataset]['path_ks'] + \
+    '/RESULTS_perturbation/'+subset+'/mask/' + name + "/"
+PERT_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
+    '/RESULTS_perturbation/'+subset+'/softmax/' + name + "/"
+    
+original_image = np.array(Img.open(original_image_path))
+GT_mask_orig = np.array(Img.open(GT_mask_path))/255
+SI_mask_orig = np.array(Img.open(SI_mask_path))/255
 
-            MC_path_20_seg = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_MC/'+subset+'/mask/' + name + "/"
-            MC_path_20_softmax = dataset_dict[dataset]['path_ks'] + \
-                '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
+GT_mask_C1, GT_mask_C2 = mask_splitter(GT_mask_orig)
+SI_mask_C1, SI_mask_C2 = mask_splitter(SI_mask_orig)
 
-            save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V3/"+dataset+"/"+subset+"/"+name+"/"
-            if not os.path.isdir(save_path):
-                os.makedirs(save_path)
+DIM = np.shape(GT_mask_orig)
+N = 20
+c = 3
 
-            original_image = np.array(Img.open(original_image_path))
+softmax_matrix_PERT = softmax_matrix_gen(
+    PERT_path_20_softmax, DIM, c, N)
 
-            GT_mask_orig = np.array(Img.open(GT_mask_path))/255
-            SI_mask_orig = np.array(Img.open(SI_mask_path))/255
+#%% Creazione Mask AVG e Mask Union
+softmax_avg_PERT = np.mean(softmax_matrix_PERT, axis=-1)
+mask_avg_PERT = np.argmax(softmax_avg_PERT,axis=-1)
+mask_avg_C1_PERT, mask_avg_C2_PERT = mask_splitter(mask_avg_PERT/2)
 
-            GT_mask_C1, GT_mask_C2 = mask_splitter(GT_mask_orig)
-            SI_mask_C1, SI_mask_C2 = mask_splitter(SI_mask_orig)
+mask_union_matrix = np.argmax(softmax_matrix_PERT, axis=2)
+mask_union_PERT = np.sum(mask_union_matrix, axis=-1)
+mask_union_PERT[mask_union_PERT>0] = 1
 
-            DIM = np.shape(GT_mask_orig)
-            N = 20
-            c = 3
+#%%
+original_image_path = LS_2c_dict['path_ds'] + \
+                subset+"/image/" + name
+GT_mask_path = LS_2c_dict['path_ds'] + \
+    subset+"/manual/" + name
+SI_mask_path = LS_2c_dict['path_ks'] + \
+    "RESULTS/"+subset+"/mask/"+name
 
-# %% SOFTMAX MATRIX GENERATOR
+PERT_path_20_seg_2c = LS_2c_dict['path_ks'] + \
+    '/RESULTS_perturbation/'+subset+'/mask/' + name + "/"
+PERT_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
+    '/RESULTS_perturbation/'+subset+'/softmax/' + name + "/"
 
-            softmax_matrix_PERT = softmax_matrix_gen(
-                PERT_path_20_softmax, DIM, c, N)
-            softmax_matrix_MC = softmax_matrix_gen(
-                MC_path_20_softmax, DIM, c, N)
-            
-            #creo binary entropy map
-            bin_ent_map_c1_PERT = binary_entropy_map(softmax_matrix_PERT[:,:,0,:])
-            bin_ent_map_c2_PERT = binary_entropy_map(softmax_matrix_PERT[:,:,1,:])
-            bin_ent_map_c1_MC = binary_entropy_map(softmax_matrix_MC[:,:,0,:])
-            bin_ent_map_c2_MC = binary_entropy_map(softmax_matrix_MC[:,:,1,:])            
-                                  
-            dice_c1_MC = []
-            dice_c2_MC = []
-            dice_c1_PERT = []
-            dice_c2_PERT = []
-            precision_c1_MC = []
-            precision_c2_MC = []
-            precision_c1_PERT = []
-            precision_c2_PERT = []
-            recall_c1_MC = []
-            recall_c2_MC = []
-            recall_c1_PERT = []
-            recall_c2_PERT = []
-            
-            Th_array = np.arange(0,1,0.01)
-            for Th in Th_array:
-                mask_auto_c1_MC,mask_auto_c2_MC = mask_generator_for_calcoli(SI_mask_C1,SI_mask_C2,bin_ent_map_c1_MC,bin_ent_map_c2_MC,Th,softmax_matrix_MC)
-                mask_auto_c1_PERT,mask_auto_c2_PERT = mask_generator_for_calcoli(SI_mask_C1,SI_mask_C2,bin_ent_map_c1_PERT,bin_ent_map_c2_PERT,Th,softmax_matrix_PERT)
-                
-                dice_c1_MC.append(dice(mask_auto_c1_MC,GT_mask_C1))
-                dice_c2_MC.append(dice(mask_auto_c2_MC,GT_mask_C2))
-                dice_c1_PERT.append(dice(mask_auto_c1_PERT,GT_mask_C1))
-                dice_c2_PERT.append(dice(mask_auto_c2_PERT,GT_mask_C2))
-                
-                precision_c1_MC.append(precision(mask_auto_c1_MC,GT_mask_C1))
-                precision_c2_MC.append(precision(mask_auto_c2_MC,GT_mask_C2))
-                precision_c1_PERT.append(precision(mask_auto_c1_PERT,GT_mask_C1))
-                precision_c2_PERT.append(precision(mask_auto_c2_PERT,GT_mask_C2))
-                
-                recall_c1_MC.append(recall(mask_auto_c1_MC,GT_mask_C1))
-                recall_c2_MC.append(recall(mask_auto_c2_MC,GT_mask_C2))
-                recall_c1_PERT.append(recall(mask_auto_c1_PERT,GT_mask_C1))
-                recall_c2_PERT.append(recall(mask_auto_c2_PERT,GT_mask_C2))
-                
-            dice_c1_MC = np.array(dice_c1_MC)
-            dice_c1_MC[np.isnan(dice_c1_MC)]=0 
-            dice_c2_MC = np.array(dice_c2_MC)
-            dice_c2_MC[np.isnan(dice_c2_MC)]=0
-            dice_c1_PERT = np.array(dice_c1_PERT)
-            dice_c1_PERT[np.isnan(dice_c1_PERT)]=0
-            dice_c2_PERT = np.array(dice_c2_PERT)
-            dice_c2_PERT[np.isnan(dice_c2_PERT)]=0
-            
-            precision_c1_MC = np.array(precision_c1_MC)
-            precision_c1_MC[np.isnan(precision_c1_MC)]=0 
-            precision_c2_MC = np.array(precision_c2_MC)
-            precision_c2_MC[np.isnan(precision_c2_MC)]=0
-            precision_c1_PERT = np.array(precision_c1_PERT)
-            precision_c1_PERT[np.isnan(precision_c1_PERT)]=0
-            precision_c2_PERT = np.array(precision_c2_PERT)
-            precision_c2_PERT[np.isnan(precision_c2_PERT)]=0
-            
-            recall_c1_MC = np.array(recall_c1_MC)
-            recall_c1_MC[np.isnan(recall_c1_MC)]=0 
-            recall_c2_MC = np.array(recall_c2_MC)
-            recall_c2_MC[np.isnan(recall_c2_MC)]=0
-            recall_c1_PERT = np.array(recall_c1_PERT)
-            recall_c1_PERT[np.isnan(recall_c1_PERT)]=0
-            recall_c2_PERT = np.array(recall_c2_PERT)
-            recall_c2_PERT[np.isnan(recall_c2_PERT)]=0
-            
-            plt.figure(figsize=(20,20))
-            plt.plot(Th_array,dice_c1_MC)
-            plt.plot(Th_array,dice_c2_MC)
-            plt.plot(Th_array,dice_c1_PERT)
-            plt.plot(Th_array,dice_c2_PERT)
-            plt.axhline(y = dice(SI_mask_C1,GT_mask_C1), color = 'r', linestyle = '-')
-            plt.xlim(0,1)
-            plt.ylim(top=1)
-            plt.legend(['c1 MC','c2 MC', 'c1 PERT', 'c2 PERT'])
-            plt.savefig(save_path + "dice.png")
-            plt.close()
-            
-            plt.figure(figsize=(20,20))
-            plt.plot(Th_array,precision_c1_MC)
-            plt.plot(Th_array,precision_c2_MC)
-            plt.plot(Th_array,precision_c1_PERT)
-            plt.plot(Th_array,precision_c2_PERT)
-            plt.axhline(y = precision(SI_mask_C1,GT_mask_C1), color = 'r', linestyle = '-')
-            plt.xlim(0,1)
-            plt.ylim(top=1)
-            plt.legend(['c1 MC','c2 MC', 'c1 PERT', 'c2 PERT'])
-            plt.savefig(save_path + "precision.png")
-            plt.close()
-            
-            plt.figure(figsize=(20,20))
-            plt.plot(Th_array,recall_c1_MC)
-            plt.plot(Th_array,recall_c2_MC)
-            plt.plot(Th_array,recall_c1_PERT)
-            plt.plot(Th_array,recall_c2_PERT)
-            plt.axhline(y = recall(SI_mask_C1,GT_mask_C1), color = 'r', linestyle = '-')
-            plt.xlim(0,1)
-            plt.ylim(top=1)
-            plt.legend(['c1 MC','c2 MC', 'c1 PERT', 'c2 PERT'])
-            plt.savefig(save_path + "recall.png")
-            plt.close()
-            
-            th_max_dice_per_image_MC_C1.append(Th_array[np.argmax(dice_c1_MC)])
-            th_max_dice_per_image_MC_C2.append(Th_array[np.argmax(dice_c2_MC)])
-            th_max_dice_per_image_PERT_C1.append(Th_array[np.argmax(dice_c1_PERT)])
-            th_max_dice_per_image_PERT_C2.append(Th_array[np.argmax(dice_c2_PERT)])
-            
-            th_max_precision_per_image_MC_C1.append(Th_array[np.argmax(precision_c1_MC)])
-            th_max_precision_per_image_MC_C2.append(Th_array[np.argmax(precision_c2_MC)])
-            th_max_precision_per_image_PERT_C1.append(Th_array[np.argmax(precision_c1_PERT)])
-            th_max_precision_per_image_PERT_C2.append(Th_array[np.argmax(precision_c2_PERT)])
-            
-            th_max_recall_per_image_MC_C1.append(Th_array[np.argmax(recall_c1_MC)])
-            th_max_recall_per_image_MC_C2.append(Th_array[np.argmax(recall_c2_MC)])
-            th_max_recall_per_image_PERT_C1.append(Th_array[np.argmax(recall_c1_PERT)])
-            th_max_recall_per_image_PERT_C2.append(Th_array[np.argmax(recall_c2_PERT)])
-            
+MC_path_20_seg_2c = LS_2c_dict['path_ks'] + \
+    '/RESULTS_MC/'+subset+'/mask/' + name + "/"
+MC_path_20_softmax_2c = LS_2c_dict['path_ks'] + \
+    '/RESULTS_MC/'+subset+'/softmax/' + name + "/"
+
+save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V5/"+dataset+"/"+subset+"/"+name+"/"
+if not os.path.isdir(save_path):
+    os.makedirs(save_path)
+
+original_image_2c = np.array(Img.open(original_image_path))
+GT_mask_orig_2c = np.array(Img.open(GT_mask_path))/255
+SI_mask_orig_2c = np.array(Img.open(SI_mask_path))/255
+
+DIM = np.shape(GT_mask_orig_2c)
+N = 20
+c = 2
+
+softmax_matrix_PERT_2c = softmax_matrix_gen(
+    PERT_path_20_softmax, DIM, c, N)
+
+softmax_matrix_PERT_2c[:,:,1,:][GT_mask_C1>0] = 0
+bin_ent_map_PERT_2c = binary_entropy_map(softmax_matrix_PERT_2c[:,:,1,:])
+BRUM = copy.deepcopy(bin_ent_map_PERT_2c)
+
+#%% Regionprops FARE ANCHE SU SINGLE INFERENCE PER SFIZIO
+# MASK_TO_USE_TO_REDUCE = SI_mask_C2
+MASK_TO_USE_TO_REDUCE = mask_avg_C2_PERT
+label_image_PERT = measure.label(MASK_TO_USE_TO_REDUCE)
+n_objects_PERT = label_image_PERT.max()
+masks_matrix_PERT = np.zeros([label_image_PERT.shape[0],label_image_PERT.shape[1],n_objects_PERT])
+unc_map_matrix_PERT = np.copy(masks_matrix_PERT)
+tau_array_PERT = []
+for i in range(n_objects_PERT):
+    if i == 0: continue
+    current_mask = np.copy(label_image_PERT)
+    current_mask[current_mask!=i] = 0
+    max_mask = np.max(current_mask)
+    if max_mask == 0: max_mask = 1
+    current_mask = current_mask/max_mask
+    masks_matrix_PERT[:,:,i] = current_mask
+    unc_map_matrix_PERT = current_mask*BRUM
+    tau_i = np.nanmean(unc_map_matrix_PERT[unc_map_matrix_PERT>0])
+    tau_array_PERT.append(tau_i)
+    del current_mask
+    
+#%% Loop con threshold
+array_PERT = copy.deepcopy(tau_array_PERT)
+array_PERT = np.array(array_PERT)
+th_range = np.array(range(0,100,1))/100
+# th_range = np.array(range(0,10,1))/10
+
+# 3 strade sono:
+# dice mask_th mask_avg 
+# dice mask_th SI
+# dice mask_th mask_unione
+
+dice_array_PERT_mask_avg=[]
+dice_array_PERT_SI=[]
+dice_array_PERT_mask_unione=[]
+counter = 0
+masks_of_masks_PERT = np.zeros((DIM[0],DIM[1],len(th_range)))
+SI_dice = dice(SI_mask_orig_2c,GT_mask_orig_2c)
+
+for th in th_range:
+    array_PERT_temp = copy.deepcopy(array_PERT)
+    array_PERT_temp[array_PERT>th] = 0
+    masks_matrix_temp = masks_matrix_PERT[:,:,np.where(array_PERT_temp>0)[0]]
+    mask_th = np.sum(masks_matrix_temp, axis=-1)
+    masks_of_masks_PERT[:,:,counter] = mask_th
+    
+    SI_reduced = np.zeros_like(SI_mask_C2)
+    SI_reduced[mask_th>0] = SI_mask_C2[mask_th>0]
+    
+    mask_avg_reduced = np.zeros_like(mask_avg_C2_PERT)
+    mask_avg_reduced[mask_th>0] = mask_avg_C2_PERT[mask_th>0]
+    
+    mask_unione_reduced = np.zeros_like(mask_union_PERT)
+    mask_unione_reduced[mask_th>0] = mask_union_PERT[mask_th>0]
+    
+    dice_th_mask_avg = dice(mask_avg_reduced,GT_mask_orig_2c)
+    dice_array_PERT_mask_avg.append(dice_th_mask_avg)
+    
+    dice_th_SI = dice(SI_reduced,GT_mask_orig_2c)
+    dice_array_PERT_SI.append(dice_th_SI)
+    
+    dice_th_mask_unione = dice(mask_unione_reduced,GT_mask_orig_2c)
+    dice_array_PERT_mask_unione.append(dice_th_mask_unione)
+    
+    if (dice_th_mask_unione>SI_dice or dice_th_mask_avg>SI_dice or dice_th_SI>SI_dice):
+        plt.figure(figsize=(15,15))
+        plt.suptitle("TH = " + str(th))
+        plt.subplot(221)
+        plt.title("Ground Truth")
+        plt.imshow(GT_mask_orig_2c)
+        plt.subplot(222)
+        plt.title("MASK_AVG_REDUCED - dice " + str(dice_th_mask_avg))
+        plt.imshow(mask_avg_reduced)
+        plt.subplot(223)
+        plt.title("mask_unione_reduced - dice " + str(dice_th_mask_unione))
+        plt.imshow(mask_unione_reduced)
+        plt.subplot(224)
+        plt.title("SI_reduced - dice " + str(dice_th_SI))
+        plt.imshow(SI_reduced)    
+        plt.savefig(save_path + "TH=" + str(th) + ".png")
         plt.close()
-        plt.figure(figsize=(30,12))
-        plt.suptitle("Threshold with max dice, precision, recall per image - MC C1")
-        plt.subplot(131)
-        plt.plot(image_list,th_max_dice_per_image_MC_C1)
-        plt.title("Dice")
-        plt.subplot(132)
-        plt.plot(image_list,th_max_precision_per_image_MC_C1)
-        plt.title("Precision")
-        plt.subplot(133)
-        plt.plot(image_list,th_max_recall_per_image_MC_C1)
-        plt.title("Recall")
-        plt.savefig(subset_save_path+"_threshold_per_image_MC_C1.png")
-        plt.close()
-        
-        plt.close()
-        plt.figure(figsize=(30,12))
-        plt.suptitle("Threshold with max dice, precision, recall per image - MC C2")
-        plt.subplot(131)
-        plt.plot(image_list,th_max_dice_per_image_MC_C2)
-        plt.title("Dice")
-        plt.subplot(132)
-        plt.plot(image_list,th_max_precision_per_image_MC_C2)
-        plt.title("Precision")
-        plt.subplot(133)
-        plt.plot(image_list,th_max_recall_per_image_MC_C2)
-        plt.title("Recall")
-        plt.savefig(subset_save_path+"threshold_per_image_MC_C2.png")
-        plt.close()
-        
-        plt.close()
-        plt.figure(figsize=(30,12))
-        plt.suptitle("Threshold with max dice, precision, recall per image - PERT C1")
-        plt.subplot(131)
-        plt.plot(image_list,th_max_dice_per_image_PERT_C1)
-        plt.title("Dice")
-        plt.subplot(132)
-        plt.plot(image_list,th_max_precision_per_image_PERT_C1)
-        plt.title("Precision")
-        plt.subplot(133)
-        plt.plot(image_list,th_max_recall_per_image_PERT_C1)
-        plt.title("Recall")
-        plt.savefig(subset_save_path+"threshold_per_image_PERT_C1.png")
-        plt.close()
-        
-        plt.close()
-        plt.figure(figsize=(30,12))
-        plt.suptitle("Threshold with max dice, precision, recall per image - PERT C2")
-        plt.subplot(131)
-        plt.plot(image_list,th_max_dice_per_image_PERT_C2)
-        plt.title("Dice")
-        plt.subplot(132)
-        plt.plot(th_max_precision_per_image_PERT_C2)
-        plt.title("Precision")
-        plt.subplot(133)
-        plt.plot(image_list,th_max_recall_per_image_PERT_C2)
-        plt.title("Recall")
-        plt.savefig(subset_save_path+"threshold_per_image_PERT_C2.png")
-        plt.close()
-        
-        dict_thresholds = {
-            'Image': image_list,
-            'MC_C1_dice': th_max_dice_per_image_MC_C1,
-            'MC_C2_dice': th_max_dice_per_image_MC_C2,
-            'PERT_C1_dice': th_max_dice_per_image_PERT_C1,
-            'PERT_C2_dice': th_max_dice_per_image_PERT_C2,
-            'MC_C1_precision': th_max_precision_per_image_MC_C1,
-            'MC_C2_precision': th_max_precision_per_image_MC_C2,
-            'PERT_C1_precision': th_max_precision_per_image_PERT_C1,
-            'PERT_C2_precision': th_max_precision_per_image_PERT_C2,
-            'MC_C1_recall': th_max_recall_per_image_MC_C1,
-            'MC_C2_recall': th_max_recall_per_image_MC_C2,
-            'PERT_C1_recall': th_max_recall_per_image_PERT_C1,
-            'PERT_C2_recall': th_max_recall_per_image_PERT_C2
-            }
-        
-        df_th = pd.DataFrame(dict_thresholds)
-        df_th.to_csv(subset_save_path+"Max_Thresholds_per_image.csv",index=False)
-        
-        
+        print("Immagine " + name + " ha cose belle")
+    counter += 1 
+    
+
+
+dice_array_PERT_mask_avg = np.array(dice_array_PERT_mask_avg)
+miglioramento_PERT_mask_avg = np.where(dice_array_PERT_mask_avg>SI_dice)[0]
+# print(miglioramento_PERT_mask_avg)
+
+dice_array_PERT_SI = np.array(dice_array_PERT_SI)
+miglioramento_PERT_SI = np.where(dice_array_PERT_SI>SI_dice)[0]
+# print(miglioramento_PERT_SI)
+
+dice_array_PERT_mask_unione = np.array(dice_array_PERT_mask_unione)
+miglioramento_PERT_mask_unione = np.where(dice_array_PERT_mask_unione>SI_dice)[0]
+# print(miglioramento_PERT_mask_unione)
+
+#%% PLOT
+plt.figure(figsize=(10,10))
+plt.plot(th_range,dice_array_PERT_mask_avg, label="Dice Score per Threshold (PERT) - Mask Avg")
+plt.axhline(SI_dice, color='r', linestyle='--', label='Single Inference Dice')
+plt.title("Dice x Threshold")
+plt.xlabel('Threshold')
+plt.ylabel('Dice Score')
+plt.legend()
+
+plt.figure(figsize=(10,10))
+plt.plot(th_range,dice_array_PERT_SI, label="Dice Score per Threshold (PERT) - Single Inference")
+plt.axhline(SI_dice, color='r', linestyle='--', label='Single Inference Dice')
+plt.title("Dice x Threshold")
+plt.xlabel('Threshold')
+plt.ylabel('Dice Score')
+plt.legend()
+
+plt.figure(figsize=(10,10))
+plt.plot(th_range,dice_array_PERT_mask_unione, label="Dice Score per Threshold (PERT) - Union Mask")
+plt.axhline(SI_dice, color='r', linestyle='--', label='Single Inference Dice')
+plt.title("Dice x Threshold")
+plt.xlabel('Threshold')
+plt.ylabel('Dice Score')
+plt.legend()
+
+
+
+
+
+
+

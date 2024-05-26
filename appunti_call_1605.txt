@@ -1,19 +1,34 @@
 Noi abbiamo immagine RGB con steatosi e contorno.
 
+
+
 1. Calcolare la maschera media delle 20 MC PERT sia per contorni che per  interno (2 maschere) da 3C
+
 2. Unione delle 2 maschere, cosi da avere steatosi completa steatosi + contorno
+
 3. Calcolare mappa entropia binaria sulla steatosi completa --> quindi sulla softmax del dataset 2C
+
 4. Avremo la mappa fig6c MILDNET2
+
 5. Dobbiamo capire quali sono gli oggetti: maschera media degli interni fatta su 3 classi e applichiamo RegionProcs (ricordare da EIM): ridà gli elementi connessi di una maschera sulla base di alcuni parametri, a noi va bene pure l'area perché a noi servono solo le coordinate
+
 6. Per ogni oggetto andiamo a calcolare l'incertezza media in quell'oggetto: quale incertezza? Quella dove abbiamo rimosso i contorni
+
+
 
 Riepilogando: abbiamo softmax completa, mettiamo a 0 tutto quello che c'era nella maschera dei contorni a 3 classi: quando è 1 nella classe 2, devo mettere a 0 la softmax media del dataset a 2 classi --> esce fuori la boundary removed unc map (loro calcolano su STD, noi calcoliamo su bin_ent)
 
+
+
 Avremo BRUM -> Prendiamo la maschera media dell'interno ricavata dalle 3 classi, e su quella facciamo RegionProps: sono sicuro che gli oggetti sono separati qui (perché dalla rete escono senza contorni).
+
+
 
 Cicliamo sugli oggetti di regionprops e di volta in volta l'oggetto di interesse e si va a moltiplicare per la BRUM -> farò la media della metrica di incertezza all'interno dell'oggetto: se ho 20 oggetti, avrò 20 valori "tau" dove tau è l'incertezza (per noi è la media dell'entropia binaria all'interno dell'oggetto). 
 Avremo tau-k dove k indica l'oggetto.
 (c'è tau-k anche nel paper)
+
+
 
 A questo punto loro definiscono un range di soglie (per noi sarà tra 0 e 1), noi andiamo a togliere tutti gli oggetti con tau-k > TH e li rimuoviamo dalla maschera media o dalla Single Inference:
 si aprono 3 strade:
@@ -24,11 +39,15 @@ Dobbiamo provarle tutte e tre come strade
 Questa sarà la maschera da cui toglieremo questi oggetti (quelli che avranno la tau sopra la TH)
 Per ogni maschera calcolata relativa ad ogni soglia, calcoliamo il GT e lo paragoniamo.
 
+
+
 Avremo plot:
 x -> soglia TAU
 y -> dice
 yline -> dice baseline (baseline va sempre calcolata tra SI e GT)
 (è quello in fig6, a)
+
+
 
 RICAPITOLIAMO:
 serve bin ent calcolata su steatosi a 2 classi (interno esterno)
@@ -36,11 +55,18 @@ serve maschere come mask media dalle 3 classi
 andiamo a rimuovere da mappa di inc quella dove la maschera dei contorni è a 1
 in questo modo troviamo la BRUM
 
+
+
 maschera dell'interno è comoda, con oggetti separabili, alla quale applichiamo regionprops per riconoscere gli oggetti. Su ogni oggetto (elemento connesso) calcoliamo  tau-k: incertezza media del prodotto tra BRUM e maschera binaria dove c'è il singolo oggetto
+
+
 
 A questo punto abbiamo 3 strade (mask media, mask or, mask SI -> calcolato sul 2 C) e togliamo GLI OGGETTI LA CUI SOGLIA TAU-K > SOGLIA TAU
 
+
+
 Il ground truth lo prendiamo sempre dal dataset a 2CLASSI
+
 
 
 CHECK - CONTROLLARE CHE LA MEDIA DELL'INTRADICE SIA GIUSTA SUI SOLI VALORI E NON SUGLI 0 VARI
@@ -53,3 +79,11 @@ Nelle slide aggiungere un pallino quando l'immagine ha una soglia in cui il dice
 BC e KL possono avere senso come MAPPE (quindi senza sommatoria), provarle così --> senza sommatoria (controllare che KL sia limitata)
 MEBC --> controllare se ha senso e se ha senso controllare in letteratura. Cosa interessante: 0-0-1 è uguale a 0-1-0 perché è comunque certa
 BC provare a moltiplicare sia con 2 che con 3
+
+
+
+
+---------------------------------
+-----------------------------------
+---------------------------------------
+i dice migliorano li non perché abbia funzionato questo approccio in particolare, ma perché è migliorata l'inference utilizzando i metodi avg e union
