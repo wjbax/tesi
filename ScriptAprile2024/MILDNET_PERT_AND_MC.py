@@ -354,7 +354,7 @@ for dataset in tqdm(dataset_dict):
         # if subset == 'test': continue
         image_list = os.listdir(
             dataset_dict[dataset]['path_ds']+subset+"/"+dataset_dict[dataset]['path_GT'])
-        subset_save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V4/"+dataset+"/"+subset+"/"
+        subset_save_path = "D:/DATASET_Tesi_Marzo2024_RESULTS_V5/"+dataset+"/"+subset+"/"
         if not os.path.isdir(subset_save_path):
             os.makedirs(subset_save_path)
         
