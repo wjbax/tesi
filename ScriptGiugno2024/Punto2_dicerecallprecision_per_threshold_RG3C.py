@@ -19,7 +19,8 @@ import pandas as pd
 
 # diff_type = "PERT"
 # diff_type_name = "_perturbation/"
-dataset = "Liver HE steatosis/"
+# dataset = "Liver HE steatosis/"
+dataset = "Renal PAS glomeruli/"
 # subset = "test"
 # image = "1004289_35.png"
 N = 20
@@ -28,8 +29,8 @@ c = 3
 
 general_path_to_save = "D:/DATASET_Tesi_marzo2024_RESULTS_V11/"
 general_dataset_path = "D:/DATASET_Tesi_marzo2024/" + dataset
-general_results_path_2c = general_dataset_path + "k-net+swin/TEST_2classes/RESULTS"
-general_results_path_3c = general_dataset_path + "k-net+swin/TEST_3classes/RESULTS"
+general_results_path_2c = general_dataset_path + "k-net+swin/TEST/RESULTS"
+general_results_path_3c = general_dataset_path + "k-net+swin/TEST/RESULTS"
 
 #%%
 for diff_type in tqdm(["PERT","MC"]):
@@ -96,10 +97,10 @@ for diff_type in tqdm(["PERT","MC"]):
             'flag_SI_recall': [],
             'flag_SI_precision': []
             }
-        for image in tqdm(os.listdir(general_dataset_path + "DATASET_3classes/" + subset + "/" + "manual/")):
-            GT_path_2c = general_dataset_path + "DATASET_2classes/" + subset + "/" + "manual/" + image
+        for image in tqdm(os.listdir(general_dataset_path + "DATASET/" + subset + "/" + "manual/")):
+            GT_path_2c = general_dataset_path + "DATASET/" + subset + "/" + "manual/" + image
             SI_path_2c = general_results_path_2c  + "/" + subset + "/" + "mask/" + image
-            GT_path_3c = general_dataset_path + "DATASET_3classes/" + subset + "/" + "manual/" + image
+            GT_path_3c = general_dataset_path + "DATASET/" + subset + "/" + "manual/" + image
             SI_path_3c = general_results_path_3c  + "/" + subset + "/" + "mask/" + image
             diff_path_2c = general_results_path_2c + diff_type_name + "/" + subset + "/" + "mask/" + image + "/"
             diff_path_3c = general_results_path_3c + diff_type_name + "/" + subset + "/" + "mask/" + image + "/"
@@ -128,7 +129,7 @@ for diff_type in tqdm(["PERT","MC"]):
             mask_union_C1 = mask_union_C1.astype(bool)
             mask_union_C2 = mask_union_C2.astype(bool)
             
-            mask_avg = wjb_functions.mask_avg_gen_3c(softmax_matrix)
+            mask_avg = wjb_functions.mask_avg_gen_3c(softmax_matrix)/2
             mask_avg_C1, mask_avg_C2 = wjb_functions.mask_splitter(mask_avg)
             mask_avg_C1 = mask_avg_C1.astype(bool)
             mask_avg_C2 = mask_avg_C2.astype(bool)
@@ -404,7 +405,7 @@ for diff_type in tqdm(["PERT","MC"]):
                 C2_dict_max_values['th_SI_max_recall'].append(th_range[np.where(C2_SI_th_recall_array == np.nanmax(C2_SI_th_recall_array))[0][0]])
             else: C2_dict_max_values['th_SI_max_recall'].append(0)
             C2_dict_max_values['SI_max_precision'].append(np.nanmax(C2_SI_th_precision_array))
-            if not C2_avg_th_precision_array.all() == True:
+            if not C2_SI_th_precision_array.all() == True:
                 C2_dict_max_values['th_SI_max_precision'].append(th_range[np.where(C2_SI_th_precision_array == np.nanmax(C2_SI_th_precision_array))[0][-1]])
             else: C2_dict_max_values['th_SI_max_precision'].append(1)
             
@@ -460,7 +461,7 @@ for diff_type in tqdm(["PERT","MC"]):
             
             C1_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C1.csv", index = False)
             
-            plt.figure(figsize=(40,8))
+            plt.figure(figsize=(30,8))
             plt.suptitle("Image " + image + " from dataset " + dataset[:-1] + ", subset: " + subset + ", class: C1")
             plt.subplot(131)
             plt.title("dice x threshold")
@@ -497,7 +498,7 @@ for diff_type in tqdm(["PERT","MC"]):
             
             C2_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C2.csv", index = False)
             
-            plt.figure(figsize=(40,8))
+            plt.figure(figsize=(30,8))
             plt.suptitle("Image " + image + " from dataset " + dataset[:-1] + ", subset: " + subset + ", class: C2")
             plt.subplot(131)
             plt.title("dice x threshold")
@@ -537,7 +538,7 @@ for diff_type in tqdm(["PERT","MC"]):
         
         C1_x = np.arange(0,len(C1_dict_max_values['th_union_max_dice']),1)
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("Union Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type + ", class: C1")
         
         plt.subplot(131)
@@ -577,7 +578,7 @@ for diff_type in tqdm(["PERT","MC"]):
         plt.close()
         
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("avg Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type)
         
         plt.subplot(131)
@@ -620,7 +621,7 @@ for diff_type in tqdm(["PERT","MC"]):
         plt.close()
         
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("SI Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type + ", class: C1")
         
         plt.subplot(131)
@@ -665,7 +666,7 @@ for diff_type in tqdm(["PERT","MC"]):
         
         C2_x = np.arange(0,len(C2_dict_max_values['th_union_max_dice']),1)
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("Union Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type + ", class: C2")
         
         plt.subplot(131)
@@ -705,7 +706,7 @@ for diff_type in tqdm(["PERT","MC"]):
         plt.close()
         
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("avg Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type)
         
         plt.subplot(131)
@@ -748,7 +749,7 @@ for diff_type in tqdm(["PERT","MC"]):
         plt.close()
         
         
-        plt.figure(figsize=(40,8))
+        plt.figure(figsize=(30,8))
         plt.suptitle("SI Mask: Dice Recall Precision - dataset: " + dataset[:-1] + " , subset: " + subset + ", " + diff_type + ", class: C2")
         
         plt.subplot(131)

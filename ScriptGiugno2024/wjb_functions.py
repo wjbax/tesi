@@ -43,7 +43,9 @@ def mask_union_gen_3c(path_of_3c_directory):
 def mask_avg_gen(softmax_matrix_3c):
     mean_softmax = np.mean(softmax_matrix_3c, axis=-1)
     mask_avg = np.argmax(mean_softmax, axis=-1)
-    mask_avg_int = mask_avg > 1.5
+    values = np.unique(mask_avg)
+    if len(values) == 1: return mask_avg
+    mask_avg_int = mask_avg > values[-2]
     return mask_avg_int
 
 def mask_avg_gen_3c(softmax_matrix_3c):
