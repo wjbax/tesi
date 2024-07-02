@@ -131,6 +131,41 @@ def binary_entropy_map(softmax_matrix):
     HB_pert[np.isnan(HB_pert)] = np.nanmin(HB_pert)
     return HB_pert
 
+#%% BC
+def bhattacharyya_coefficient_2(softmax_matrix_unica):
+    radicando_map = np.sqrt(softmax_matrix_unica[:,:,1]*softmax_matrix_unica[:,:,2])
+    radicando_map[radicando_map<1e-7] = 1e-7 
+    bc_map = np.log(radicando_map)/np.log(np.sqrt(1e-7*1e-7))
+    return bc_map
+
+def bhattacharyya_coefficient_3(softmax_matrix_unica):
+    radicando_map = np.sqrt(softmax_matrix_unica[:,:,0]*softmax_matrix_unica[:,:,1]*softmax_matrix_unica[:,:,2])
+    radicando_map[radicando_map<1e-7] = 1e-7 
+    bc_map = np.log(radicando_map)/np.log(np.sqrt(1e-7*1e-7))
+    return bc_map
+
+def mean_BC_map_2(softmax_matrix_totale):
+    radicando_matrix = np.sqrt(softmax_matrix_totale[:,:,1,:]*softmax_matrix_totale[:,:,2,:])
+    radicando_matrix[radicando_matrix<1e-7] = 1e-7 
+    bc_map_matrix = np.log(radicando_matrix)/np.log(np.sqrt(1e-7*1e-7))
+    return np.nanmean(bc_map_matrix,axis=-1)
+    
+def mean_BC_map_3(softmax_matrix_totale):
+    radicando_matrix = np.sqrt(softmax_matrix_totale[:,:,0,:]*softmax_matrix_totale[:,:,1,:]*softmax_matrix_totale[:,:,2,:])
+    radicando_matrix[radicando_matrix<1e-7] = 1e-7 
+    bc_map_matrix = np.log(radicando_matrix)/np.log(np.sqrt(1e-7*1e-7))
+    return np.nanmean(bc_map_matrix,axis=-1)
+
+def mean_softmax_BC_2(softmax_matrix_totale):
+    mean_softmax = np.nanmean(softmax_matrix_totale,axis=-1)
+    return bhattacharyya_coefficient_2(mean_softmax)
+
+def mean_softmax_BC_3(softmax_matrix_totale):
+    mean_softmax = np.nanmean(softmax_matrix_totale,axis=-1)
+    return bhattacharyya_coefficient_3(mean_softmax)
+
+#%%
+
 def thresholding_dicerecallprecision(mask,
                                      th_range,
                                      unc_map,GT_mask,
