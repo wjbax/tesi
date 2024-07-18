@@ -123,8 +123,8 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
                 softmax_matrix = wjb_functions.softmax_matrix_gen(softmax_path_3c, DIM, c, N)
                 
                 
-                # unc_map = wjb_functions.mean_softmax_BC_3(softmax_matrix)
-                unc_map = wjb_functions.mean_BC_map_3(softmax_matrix)
+                unc_map = wjb_functions.mean_softmax_BC_3(softmax_matrix)
+                # unc_map = wjb_functions.mean_BC_map_3(softmax_matrix)
                 
                 mask_union = wjb_functions.mask_union_gen_3c(diff_path_3c)/255
                 mask_union_C1, mask_union_C2 = wjb_functions.mask_splitter(mask_union)
@@ -461,7 +461,7 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
                 path_to_save_figure = general_path_to_save + dataset_name + diff_type + "/" + subset + "/"
                 if not os.path.isdir(path_to_save_figure): os.makedirs(path_to_save_figure)
                 
-                C1_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C1_BC_then_mean.csv", index = False)
+                C1_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C1_mean_then_BC.csv", index = False)
                 
                 plt.figure(figsize=(30,8))
                 plt.suptitle("Image " + image + " from dataset " + dataset[:-1] + ", subset: " + subset + ", class: C1")
@@ -495,10 +495,10 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
                 plt.xlim(0,1)
                 plt.axhline(SI_precision_C1,color='r',linestyle='--',label="BaseLine: precision SI")
                 plt.legend()
-                plt.savefig(path_to_save_figure + image[:-4] + "_dicerecallprecision_x_threshold_C1_BC_then_mean.png")
+                plt.savefig(path_to_save_figure + image[:-4] + "_dicerecallprecision_x_threshold_C1_mean_then_BC.png")
                 plt.close()
                 
-                C2_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C2_BC_then_mean.csv", index = False)
+                C2_df_temp.to_csv(path_to_save_figure + image[:-4] + "_DATAFRAME_C2_mean_then_BC.csv", index = False)
                 
                 plt.figure(figsize=(30,8))
                 plt.suptitle("Image " + image + " from dataset " + dataset[:-1] + ", subset: " + subset + ", class: C2")
@@ -532,11 +532,11 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
                 plt.xlim(0,1)
                 plt.axhline(SI_precision_C2,color='r',linestyle='--',label="BaseLine: precision SI")
                 plt.legend()
-                plt.savefig(path_to_save_figure + image[:-4] + "_dicerecallprecision_x_threshold_C2_BC_then_mean.png")
+                plt.savefig(path_to_save_figure + image[:-4] + "_dicerecallprecision_x_threshold_C2_mean_then_BC.png")
                 plt.close()
             
             C1_df_gen = pd.DataFrame.from_dict(C1_dict_max_values)
-            C1_df_gen.to_csv(path_to_save_figure + "DATAFRAME_max_values_C1_BC_then_mean.csv", index=True)
+            C1_df_gen.to_csv(path_to_save_figure + "DATAFRAME_max_values_C1_mean_then_BC.csv", index=True)
             
             C1_x = np.arange(0,len(C1_dict_max_values['th_union_max_dice']),1)
             
@@ -576,7 +576,7 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "union_mask_optimal_threhsolds_C1_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "union_mask_optimal_threhsolds_C1_mean_then_BC.png")
             plt.close()
             
             
@@ -619,7 +619,7 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "avg_mask_optimal_threhsolds_C1_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "avg_mask_optimal_threhsolds_C1_mean_then_BC.png")
             plt.close()
             
             
@@ -659,12 +659,12 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "SI_mask_optimal_threhsolds_C1_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "SI_mask_optimal_threhsolds_C1_mean_then_BC.png")
             plt.close()
             
         
             C2_df_gen = pd.DataFrame.from_dict(C2_dict_max_values)
-            C2_df_gen.to_csv(path_to_save_figure + "DATAFRAME_max_values_C2_BC_then_mean.csv", index=True)
+            C2_df_gen.to_csv(path_to_save_figure + "DATAFRAME_max_values_C2_mean_then_BC.csv", index=True)
             
             C2_x = np.arange(0,len(C2_dict_max_values['th_union_max_dice']),1)
             
@@ -704,7 +704,7 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "union_mask_optimal_threhsolds_C2_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "union_mask_optimal_threhsolds_C2_mean_then_BC.png")
             plt.close()
             
             
@@ -747,7 +747,7 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "avg_mask_optimal_threhsolds_C2_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "avg_mask_optimal_threhsolds_C2_mean_then_BC.png")
             plt.close()
             
             
@@ -787,5 +787,5 @@ for dataset in ["Renal PAS tubuli/", "Renal PAS glomeruli/"]:
             plt.ylabel("Opt th - precision")
             plt.legend()
             
-            plt.savefig(path_to_save_figure + "SI_mask_optimal_threhsolds_C2_BC_then_mean.png")
+            plt.savefig(path_to_save_figure + "SI_mask_optimal_threhsolds_C2_mean_then_BC.png")
             plt.close()

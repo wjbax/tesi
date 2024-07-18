@@ -14,6 +14,7 @@ import os
 from skimage import measure
 import copy
 from tqdm import tqdm
+import pandas as pd
 
 
 #%% Funzioni
@@ -168,95 +169,13 @@ def mean_softmax_BC_3(softmax_matrix_totale):
     mean_softmax = np.nanmean(softmax_matrix_totale,axis=-1)
     return bhattacharyya_coefficient_3(mean_softmax)
 
+def wjmode(unc_map):
+    array = np.round(unc_map,2)
+    val,counts = np.unique(array, return_counts=True)
+    index = np.argmax(counts)
+    return val[index]
+
 #%%
-
-def thresholding_dicerecallprecision(mask,
-                                     th_range,
-                                     unc_map,GT_mask,
-                                     SI_mask,max_dice,
-                                     max_recall,
-                                     max_precision,
-                                     path_to_save_plot,
-                                     SI_dice,
-                                     SI_recall,
-                                     SI_precision,
-                                     name_of_mask,
-                                     image,
-                                     th_list_dice,
-                                     th_list_recall,
-                                     th_list_precision,
-                                     max_dice_list,
-                                     max_recall_list,
-                                     max_precision_list
-                                     ):
-    dice_per_plot = []
-    recall_per_plot = []
-    precision_per_plot = []
+def pearsons(array1,array2):
+    return pd.DataFrame(np.array([np.array(array1),np.array(array2)]).T).corr()
     
-    for th in th_range:
-        mask_to_use = mask & (unc_map<th)
-        dice_th = dice(GT_mask,mask_to_use)
-        dice_per_plot.append(dice_th)
-        recall_th = recall(GT_mask,mask_to_use)
-        recall_per_plot.append(recall_th)
-        precision_th = precision(GT_mask,mask_to_use)
-        precision_per_plot.append(precision_th)
-        if dice_th > max_dice:
-            max_dice = dice_th
-            th_max_dice = th
-        if recall_th > max_recall:
-            max_recall = recall_th
-            th_max_recall = th
-        if precision_th > max_precision:
-            max_precision = precision_th
-            th_max_precision = th
-            
-    dice_per_plot = np.array(dice_per_plot)
-    recall_per_plot = np.array(recall_per_plot)
-    precision_per_plot = np.array(precision_per_plot)
-
-    # path_to_save_plot = general_savepath + type_of_diff_dict[type_of_diff]["name"] + "/"
-    # if not os.path.isdir(path_to_save_plot): os.makedirs(path_to_save_plot)
-    
-    plt.figure(figsize=(45,5))
-    plt.suptitle("Dice, Recall, Precision for image: " + image[:-4] + ", using " + name_of_mask)
-    plt.subplot(131)
-    plt.plot(th_range,dice_per_plot, 'b', label="dice per th")
-    plt.axhline(SI_dice, color='r', label="Single Inference dice")
-    # plt.axhline(dice_th, color='g', label="Total Mask dice")
-    plt.xlim(0,1)
-    plt.xlabel("Threshold")
-    plt.title("Dice per threshold")
-    plt.legend()
-    plt.subplot(132)
-    plt.plot(th_range,recall_per_plot, 'b', label="recall per th")
-    plt.axhline(SI_recall, color='r', label="Single Inference recall")
-    # plt.axhline(recall_th, color='g', label="Total Mask recall")
-    plt.xlim(0,1)
-    plt.xlabel("Threshold")
-    plt.title("Recall per threshold")
-    plt.legend()
-    plt.subplot(133)
-    plt.plot(th_range,precision_per_plot, 'b', label="precision per th")
-    plt.axhline(SI_precision, color='r', label="Single Inference precision")
-    # plt.axhline(precision_th, color='g', label="Total Mask precision")
-    plt.xlim(0,1)
-    plt.xlabel("Threshold")
-    plt.title("Precision per threshold")
-    plt.legend()
-    plt.savefig(path_to_save_plot + image[:-4] + "_subplot_per_threshold.png")
-    # plt.savefig(path_to_save_plot + image[:-4] + "_" + name_of_mask + "_subplot_per_threshold.png")
-    plt.close()
-    
-    if max_dice == 0: th_max_dice = 0 
-    if max_recall == 0: th_max_recall = 0 
-    if max_precision == 0: th_max_precision = 0 
-     
-    th_list_dice.append(th_max_dice)
-    th_list_recall.append(th_max_recall)
-    th_list_precision.append(th_max_precision)
-    
-    max_dice_list.append(max_dice)
-    max_recall_list.append(max_recall)
-    max_precision_list.append(max_precision)
-    return th_list_dice, th_list_recall, th_list_precision, max_dice_list, max_recall_list, max_precision_list

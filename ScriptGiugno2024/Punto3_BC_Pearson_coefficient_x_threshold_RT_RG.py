@@ -20,7 +20,7 @@ import pandas as pd
 # diff_type_name = "_perturbation/"
 # dataset = "Renal PAS glomeruli/"
 # subset = "test"
-# image = "1004289_35mean_then_BC.png"
+# image = "1004289_35BC_then_mean.png"
 N = 20
 # radius = 5
 c = 3
@@ -75,8 +75,8 @@ for dataset in ["Renal PAS glomeruli/","Renal PAS tubuli/"]:
                 DIM = np.shape(GT_mask)[:2]
                 softmax_matrix = wjb_functions.softmax_matrix_gen(softmax_path_3c, DIM, c, N)
                 
-                # unc_map = wjb_functions.mean_softmax_BC_3(softmax_matrix)
-                unc_map = wjb_functions.mean_BC_map_3(softmax_matrix)
+                unc_map = wjb_functions.mean_softmax_BC_3(softmax_matrix)
+                # unc_map = wjb_functions.mean_BC_map_3(softmax_matrix)
                 
                 SI_mask = cv2.imread(SI_path_3c, cv2.IMREAD_GRAYSCALE)/255
                 SI_mask_C1, SI_mask_C2 = wjb_functions.mask_splitter(SI_mask)
@@ -121,9 +121,9 @@ for dataset in ["Renal PAS glomeruli/","Renal PAS tubuli/"]:
                 plt.xlabel("Sum of binary entropy map when greater than threshold {x}".format(x=th))
                 plt.ylabel("Dice between Single Inference and Ground Truth")
                 if th!=1.0:
-                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DICExBINMAP_threshold_0{x}".format(x=str(th)[-1]) + "mean_then_BC.png")
+                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DICExBINMAP_threshold_0{x}".format(x=str(th)[-1]) + "BC_then_mean.png")
                 if th==1.0:
-                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DICExBINMAP_threshold_10" + "mean_then_BC.png")
+                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DICExBINMAP_threshold_10" + "BC_then_mean.png")
                 plt.close()
                 if not 'th_{a}'.format(a=th) in C1_dict_corr_per_th.keys(): C1_dict_corr_per_th['th_{a}'.format(a=th)] = []
                 C1_dict_corr_per_th['th_{a}'.format(a=th)].append(C1_rho)
@@ -139,9 +139,9 @@ for dataset in ["Renal PAS glomeruli/","Renal PAS tubuli/"]:
                 plt.xlabel("Sum of binary entropy map when greater than threshold {x}".format(x=th))
                 plt.ylabel("Dice between Single Inference and Ground Truth")
                 if th!=1.0:
-                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DICExBINMAP_threshold_0{x}".format(x=str(th)[-1]) + "mean_then_BC.png")
+                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DICExBINMAP_threshold_0{x}".format(x=str(th)[-1]) + "BC_then_mean.png")
                 if th==1.0:
-                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DICExBINMAP_threshold_10" + "mean_then_BC.png")
+                    plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DICExBINMAP_threshold_10" + "BC_then_mean.png")
                 plt.close()
                 if not 'th_{a}'.format(a=th) in C2_dict_corr_per_th.keys(): C2_dict_corr_per_th['th_{a}'.format(a=th)] = []
                 C2_dict_corr_per_th['th_{a}'.format(a=th)].append(C2_rho)
@@ -154,7 +154,7 @@ for dataset in ["Renal PAS glomeruli/","Renal PAS tubuli/"]:
             plt.xlabel("Threshold")
             plt.ylabel("Rho coefficient")
             plt.xlim(0,1)
-            plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_RHO_x_THRESHOLDmean_then_BC.png")
+            plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_RHO_x_THRESHOLDBC_then_mean.png")
             plt.close()
             
             C2_rho_array = np.array(C2_rho_array)
@@ -164,10 +164,10 @@ for dataset in ["Renal PAS glomeruli/","Renal PAS tubuli/"]:
             plt.xlabel("Threshold")
             plt.ylabel("Rho coefficient")
             plt.xlim(0,1)
-            plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_RHO_x_THRESHOLDmean_then_BC.png")
+            plt.savefig(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_RHO_x_THRESHOLDBC_then_mean.png")
             plt.close()
             
-            pd.DataFrame.from_dict(C1_dict_data).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DATAFRAME_sumbinent_x_thresholdmean_then_BC.csv")
-            pd.DataFrame.from_dict(C1_dict_corr_per_th).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_RHO_values_x_thresholdmean_then_BC.csv")
-            pd.DataFrame.from_dict(C2_dict_data).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DATAFRAME_sumbinent_x_thresholdmean_then_BC.csv")
-            pd.DataFrame.from_dict(C2_dict_corr_per_th).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_RHO_values_x_thresholdmean_then_BC.csv")
+            pd.DataFrame.from_dict(C1_dict_data).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_DATAFRAME_sumbinent_x_thresholdBC_then_mean.csv")
+            pd.DataFrame.from_dict(C1_dict_corr_per_th).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C1_RHO_values_x_thresholdBC_then_mean.csv")
+            pd.DataFrame.from_dict(C2_dict_data).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_DATAFRAME_sumbinent_x_thresholdBC_then_mean.csv")
+            pd.DataFrame.from_dict(C2_dict_corr_per_th).to_csv(general_path_to_save + dataset_name + diff_type + "/" + subset + "/" + "C2_RHO_values_x_thresholdBC_then_mean.csv")
