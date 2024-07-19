@@ -19,6 +19,33 @@ import pandas as pd
 
 #%% Funzioni
 
+def intradice_mat(mask_matrix):
+    N = np.shape(mask_matrix)[-1]
+    dice_mat = -np.ones((N,N))
+    for i in range(N):
+        for j in range(i+1,N):
+            dice_mat[i,j] = dice(mask_matrix[:,:,i],mask_matrix[:,:,j])
+    dice_mat[dice_mat<0] = np.nan
+    return dice_mat
+
+def mask_matrix_gen_2c(path_of_2c_directory,DIM,N):
+    path = path_of_2c_directory
+    mask_matrix = np.zeros((DIM[0],DIM[1],N),dtype=bool)
+    i = 0
+    for n in os.listdir(path):
+        mask_matrix[:,:,i] = cv2.imread(path+n, cv2.IMREAD_GRAYSCALE)
+        i += 1
+    return mask_matrix
+
+def mask_matrix_gen_3c(path_of_2c_directory,DIM,N):
+    path = path_of_2c_directory
+    mask_matrix = np.zeros((DIM[0],DIM[1],N))
+    i = 0
+    for n in os.listdir(path):
+        mask_matrix[:,:,i] = cv2.imread(path+n, cv2.IMREAD_GRAYSCALE)
+        i += 1
+    return mask_matrix
+
 def mask_union_gen(path_of_3c_directory):
     path = path_of_3c_directory
     temp = cv2.imread(path+"1.png", cv2.IMREAD_GRAYSCALE)
@@ -134,7 +161,7 @@ def binary_entropy_map(softmax_matrix):
 
 #%% BC
 def bhattacharyya_coefficient_2(softmax_matrix_unica):
-    radicando_map = np.sqrt(softmax_matrix_unica[:,:,1]*softmax_matrix_unica[:,:,2])
+    radicando_map = np.sqrt(softmax_matrix_unica[:,:,-2]*softmax_matrix_unica[:,:,-1])
     radicando_map[radicando_map<1e-7] = 1e-7 
     # bc_map = np.log(radicando_map)/np.log(1e-7*1e-7) # è 1e-7^2 perché 1e-7 è sqrt(1e-7^2)
     bc_map = np.log(radicando_map)/np.log(1e-7) # è 1e-7^2 perché 1e-7 è sqrt(1e-7^2)
